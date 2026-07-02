@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
 
-import time
+# ==========================================================
+# SANDRAY AI Assistant
+# Version 2.0-alpha2
+# ==========================================================
+
+# ==========================================================
+# Imports
+# ==========================================================
+
 import os
+import time
 import subprocess
 import tempfile
 import yaml
-
 from ui.display import Display
 display = Display()
+from ui.display import Display
 
-# ----------------------------------------------------------
-# Load configuration
-# ----------------------------------------------------------
+# ==========================================================
+# Configuration
+# ==========================================================
 
 with open("config/config.yaml", "r") as f:
     cfg = yaml.safe_load(f)
@@ -34,8 +43,16 @@ THEME = cfg["interface"]["theme"]
 
 LOG_LEVEL = cfg["logging"]["level"]
 
-history = []
+# ==========================================================
+# Global State
+# ==========================================================
+
+history = []	
 turns = 0
+
+# ==========================================================
+# Main Application Loop
+# ==========================================================
 
 while True:
     display.clear()
@@ -53,6 +70,10 @@ while True:
 
     print("Press ENTER when finished.\n")
 
+# ==========================================================
+# Audio Recording
+# ==========================================================
+
     rec = subprocess.Popen([
         "parecord",
         "--device=" + MIC,
@@ -69,6 +90,10 @@ while True:
 
     display.status("THINKING")
 
+# ==========================================================
+# Speech Recognition (Whisper)
+# ==========================================================
+
     q = subprocess.check_output([
         WHISPER,
         "-m",
@@ -84,6 +109,10 @@ while True:
     display.user(question)
 
     history.append("User: " + question)
+
+# ==========================================================
+# AI Processing
+# ==========================================================
 
     prompt = (
         f"You are {WAKE_WORD}, Richard's handheld AI assistant.\n"
@@ -113,6 +142,10 @@ while True:
 
     display.status("SPEAKING")
 
+# ==========================================================
+# Speech Synthesis (Piper)
+# ==========================================================
+
     reply = tempfile.mktemp(suffix=".wav")
 
     print("\nStarting Piper...")
@@ -131,7 +164,10 @@ while True:
 
     print("Waking up speaker....")
 
-    # Wake up the USB speaker
+# ==========================================================
+# Audio Playback
+# ==========================================================
+
     subprocess.run([
         "aplay",
         "-q",
@@ -147,6 +183,10 @@ while True:
         SPEAKER,
         reply
     ], check=True)
+
+# ==========================================================
+# Cleanup
+# ==========================================================
 
     try:
         os.remove(reply)
