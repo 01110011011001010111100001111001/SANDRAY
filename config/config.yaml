@@ -15,6 +15,10 @@ ai:
   model: "gpt-5-mini"
   max_history: 20
 
+memory:
+  enabled: true
+  max_turns: 20
+
 speech:
 
   whisper:

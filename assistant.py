@@ -19,7 +19,9 @@ from ai.chat import ask
 from audio.recorder import record
 from speech.whisper import transcribe
 from speech.piper import speak
+from ai.memory import Memory
 from ui.display import Display
+
 display = Display()
 
 # ==========================================================
@@ -47,12 +49,16 @@ THEME = cfg["interface"]["theme"]
 
 LOG_LEVEL = cfg["logging"]["level"]
 
+MEMORY_ENABLED = cfg["memory"]["enabled"]
+MEMORY_MAX_TURNS = cfg["memory"]["max_turns"]
+
 # ==========================================================
 # Global State
 # ==========================================================
 
-history = []
-turns = 0
+memory = Memory(
+    max_turns=MEMORY_MAX_TURNS,
+    enabled=MEMORY_ENABLED)
 
 # ==========================================================
 # Main Application Loop
@@ -101,7 +107,7 @@ while True:
         "Reply in one short paragraph.\n"
         "Maximum 40 words.\n"
         "Never use markdown.\n\n"
-        + "\n".join(history)
+        + memory.prompt()
     )
 
     answer = ask(
@@ -110,12 +116,7 @@ while True:
     )
     answer = answer[:160]
 
-    history.append("Assistant: " + answer)
-
-    turns += 1
-    if turns > 20:
-        history = []
-        turns = 0
+    memory.add_assistant(answer)
 
     display.divider()
     display.assistant(answer)
