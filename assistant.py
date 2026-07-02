@@ -17,6 +17,7 @@ import yaml
 
 from audio.recorder import record
 from speech.whisper import transcribe
+from speech.piper import speak
 from ui.display import Display
 display = Display()
 
@@ -125,56 +126,16 @@ while True:
     display.status("SPEAKING")
 
 # ==========================================================
-# Speech Synthesis (Piper)
+# Speech Synthesis / Playback
 # ==========================================================
 
-    reply = tempfile.mktemp(suffix=".wav")
-
-    # Developer logging (Level 3 will expand this later)
-    if LOG_LEVEL == "developer":
-        print("\n[PIPER] Starting speech synthesis...")
-
-    subprocess.run([
+    speak(
+        answer,
         PIPER,
-        "--model",
         VOICE,
-        "--output_file",
-        reply
-    ], input=answer, text=True, check=True)
-
-    time.sleep(0.5)
-
-    if LOG_LEVEL == "developer":
-        print("[PIPER] Waking USB speaker...")
-
-# ==========================================================
-# Audio Playback
-# ==========================================================
-
-    subprocess.run([
-        "aplay",
-        "-q",
-        "-D",
         SPEAKER,
-        "/usr/share/sounds/alsa/Front_Center.wav"
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    subprocess.run([
-        "aplay",
-        "-q",
-        "-D",
-        SPEAKER,
-        reply
-    ], check=True)
-
-# ==========================================================
-# Cleanup
-# ==========================================================
-
-    try:
-        os.remove(reply)
-    except:
-        pass
-
+        LOG_LEVEL
+    )
     display.status("READY")
     input("Press ENTER for next question...")
+
