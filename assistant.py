@@ -42,6 +42,9 @@ PIPER = cfg["speech"]["piper"]["executable"]
 VOICE = cfg["speech"]["piper"]["voice"]
 
 AICHAT = cfg["ai"]["executable"]
+MAX_WORDS = cfg["ai"]["response"]["max_words"]
+RESPONSE_STYLE = cfg["ai"]["response"]["style"]
+ALLOW_MARKDOWN = cfg["ai"]["response"]["markdown"]
 
 WAKE_WORD = cfg["assistant"]["wake_word"]
 
@@ -104,11 +107,14 @@ while True:
 
     prompt = (
         f"You are {WAKE_WORD}, Richard's handheld AI assistant.\n"
-        "Reply in one short paragraph.\n"
-        "Maximum 40 words.\n"
-        "Never use markdown.\n\n"
-        + memory.prompt()
+        f"Reply as {RESPONSE_STYLE}.\n"
+        f"Maximum {MAX_WORDS} words.\n"
     )
+
+    if not ALLOW_MARKDOWN:
+        prompt += "Never use markdown.\n"
+
+    prompt += "\n" + memory.prompt()
 
     answer = ask(
         AICHAT,

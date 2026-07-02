@@ -13,6 +13,12 @@ ai:
   provider: "openai"
   executable: "/usr/local/bin/aichat"
   model: "gpt-5-mini"
+
+  response:
+    max_words: 100
+    style: "one short paragraph"
+    markdown: false
+
   max_history: 20
 
 memory:
