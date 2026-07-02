@@ -67,8 +67,9 @@ while True:
         break
 
     display.status("LISTENING")
-
-    print("Press ENTER when finished.\n")
+    print()
+    print("Speak now. Press ENTER when you have finished.")
+    print()
 
 # ==========================================================
 # Audio Recording
@@ -148,7 +149,9 @@ while True:
 
     reply = tempfile.mktemp(suffix=".wav")
 
-    print("\nStarting Piper...")
+    # Developer logging (Level 3 will expand this later)
+    if LOG_LEVEL == "developer":
+        print("\n[PIPER] Starting speech synthesis...")
 
     subprocess.run([
         PIPER,
@@ -158,11 +161,10 @@ while True:
         reply
     ], input=answer, text=True, check=True)
 
-    print("Piper finished generating WAV.")
-
     time.sleep(0.5)
 
-    print("Waking up speaker....")
+    if LOG_LEVEL == "developer":
+        print("[PIPER] Waking USB speaker...")
 
 # ==========================================================
 # Audio Playback
