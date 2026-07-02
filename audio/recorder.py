@@ -1,5 +1,5 @@
 import subprocess
-
+from audio.silence import wait_for_end_of_speech
 
 def record(
     filename,
@@ -30,7 +30,11 @@ def record(
         filename
     ])
 
-    input()
+    wait_for_end_of_speech(
+        silence_enabled,
+        silence_timeout,
+        silence_threshold
+    )
 
     rec.terminate()
     rec.wait()
