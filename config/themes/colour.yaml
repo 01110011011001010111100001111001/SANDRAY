@@ -1,0 +1,20 @@
+name: "Professional Colour"
+
+title: bright_magenta
+header: white
+
+user: bright_blue
+assistant: bright_cyan
+
+ready: bright_green
+listening: bright_green
+thinking: yellow
+speaking: bright_cyan
+
+info: white
+warning: yellow
+error: bright_red
+
+border: grey70
+divider: grey50
+diagnostic: grey70

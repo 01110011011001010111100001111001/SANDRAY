@@ -1,0 +1,47 @@
+# ==========================================================
+# SANDRAY Configuration
+# Version 2.0 Alpha
+# ==========================================================
+
+version: "2.0-alpha1"
+
+assistant:
+  name: "SANDRAY"
+  wake_word: "SANDRAY"
+
+ai:
+  provider: "openai"
+  model: "gpt-5-mini"
+  max_history: 20
+
+speech:
+
+  whisper:
+    executable: "/home/richard/whisper.cpp/build/bin/whisper-cli"
+    model: "/home/richard/whisper.cpp/models/ggml-base.en.bin"
+
+  piper:
+    executable: "/home/richard/.local/bin/piper"
+    voice: "/home/richard/piper/en_GB-alan-medium.onnx"
+
+audio:
+
+  microphone: "alsa_input.usb-0b0e_Jabra_SPEAK_510_USB_70BF92550122021900-00.mono-fallback"
+
+  speaker: "plughw:3,0"
+
+  mirror_output: false
+
+interface:
+
+  theme: "colour"
+
+  developer_mode: false
+
+logging:
+
+  level: "normal"
+
+system:
+
+  auto_restart: true

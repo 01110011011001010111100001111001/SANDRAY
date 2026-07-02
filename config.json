@@ -1,0 +1,9 @@
+{
+    "mic":"alsa_input.usb-0b0e_Jabra_SPEAK_510_USB_70BF92550122021900-00.mono-fallback",
+    "speaker":"plughw:3,0",
+    "whisper":"/home/richard/whisper.cpp/build/bin/whisper-cli",
+    "model":"/home/richard/whisper.cpp/models/ggml-base.en.bin",
+    "aichat":"/usr/local/bin/aichat",
+    "piper":"/home/richard/.local/bin/piper",
+    "voice":"/home/richard/piper/en_GB-alan-medium.onnx"
+}

@@ -1,0 +1,20 @@
+name: "Green CRT"
+
+title: green
+header: green
+
+user: green
+assistant: green
+
+ready: green
+listening: green
+thinking: green
+speaking: green
+
+info: green
+warning: green
+error: green
+
+border: green
+divider: green
+diagnostic: green
