@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 import yaml
 
+from ai.chat import ask
 from audio.recorder import record
 from speech.whisper import transcribe
 from speech.piper import speak
@@ -103,12 +104,10 @@ while True:
         + "\n".join(history)
     )
 
-    answer = subprocess.check_output(
-        [AICHAT],
-        input=prompt,
-        text=True
-    ).strip()
-
+    answer = ask(
+        AICHAT,
+        prompt
+    )
     answer = answer[:160]
 
     history.append("Assistant: " + answer)
