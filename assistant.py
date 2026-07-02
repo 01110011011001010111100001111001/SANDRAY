@@ -71,8 +71,6 @@ while True:
 
     display.status("LISTENING")
     print()
-    print("Speak now. Press ENTER when you have finished.")
-    print()
 
 # ==========================================================
 # Audio Recording
