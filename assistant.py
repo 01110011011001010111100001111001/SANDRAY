@@ -14,6 +14,8 @@ import time
 import subprocess
 import tempfile
 import yaml
+
+from audio.recorder import record
 from speech.whisper import transcribe
 from ui.display import Display
 display = Display()
@@ -47,7 +49,7 @@ LOG_LEVEL = cfg["logging"]["level"]
 # Global State
 # ==========================================================
 
-history = []	
+history = []
 turns = 0
 
 # ==========================================================
@@ -75,21 +77,10 @@ while True:
 # Audio Recording
 # ==========================================================
 
-    rec = subprocess.Popen([
-        "parecord",
-        "--device=" + MIC,
-        "--rate=16000",
-        "--channels=1",
-        "--file-format=wav",
-        "/tmp/question.wav"
-    ])
-
-    input()
-
-    rec.terminate()
-    rec.wait()
-
-    display.status("THINKING")
+    record(
+        "/tmp/question.wav",
+        MIC
+    )
 
 # ==========================================================
 # Speech Recognition (Whisper)
