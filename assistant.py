@@ -19,6 +19,7 @@ from ai.chat import ask
 from audio.recorder import record
 from speech.whisper import transcribe
 from speech.piper import speak
+from ai.prompt import build_prompt
 from ai.memory import Memory
 from ui.display import Display
 
@@ -34,6 +35,9 @@ with open("config/config.yaml", "r") as f:
 MIC = cfg["audio"]["microphone"]
 
 SPEAKER = cfg["audio"]["speaker"]
+SILENCE_ENABLED = cfg["audio"]["silence_detection"]["enabled"]
+SILENCE_TIMEOUT = cfg["audio"]["silence_detection"]["timeout"]
+SILENCE_THRESHOLD = cfg["audio"]["silence_detection"]["threshold"]
 
 WHISPER = cfg["speech"]["whisper"]["executable"]
 MODEL = cfg["speech"]["whisper"]["model"]
@@ -45,6 +49,7 @@ AICHAT = cfg["ai"]["executable"]
 MAX_WORDS = cfg["ai"]["response"]["max_words"]
 RESPONSE_STYLE = cfg["ai"]["response"]["style"]
 ALLOW_MARKDOWN = cfg["ai"]["response"]["markdown"]
+PERSONALITY = cfg["ai"]["personality"]
 
 WAKE_WORD = cfg["assistant"]["wake_word"]
 
@@ -88,7 +93,10 @@ while True:
 
     record(
         "/tmp/question.wav",
-        MIC
+        MIC,
+        SILENCE_ENABLED,
+        SILENCE_TIMEOUT,
+        SILENCE_THRESHOLD
     )
 
 # ==========================================================
@@ -105,22 +113,18 @@ while True:
 # AI Processing
 # ==========================================================
 
-    prompt = (
-        f"You are {WAKE_WORD}, Richard's handheld AI assistant.\n"
-        f"Reply as {RESPONSE_STYLE}.\n"
-        f"Maximum {MAX_WORDS} words.\n"
+    prompt = build_prompt(
+        personality=PERSONALITY,
+        response_style=RESPONSE_STYLE,
+        max_words=MAX_WORDS,
+        allow_markdown=ALLOW_MARKDOWN,
+        memory=memory
     )
-
-    if not ALLOW_MARKDOWN:
-        prompt += "Never use markdown.\n"
-
-    prompt += "\n" + memory.prompt()
 
     answer = ask(
         AICHAT,
         prompt
     )
-    answer = answer[:160]
 
     memory.add_assistant(answer)
 

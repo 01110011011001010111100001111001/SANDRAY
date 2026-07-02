@@ -14,12 +14,17 @@ ai:
   executable: "/usr/local/bin/aichat"
   model: "gpt-5-mini"
 
-  response:
-    max_words: 100
-    style: "one short paragraph"
-    markdown: false
+  personality: |
+    You are Richard's trusted handheld AI companion.
+    Respond naturally and conversationally.
+    Do not introduce yourself unless asked.
+    Do not list your capabilities unless asked.
+    Answer the user's question directly.
 
-  max_history: 20
+  response:
+    style: "natural conversation"
+    max_words: 40
+    markdown: false
 
 memory:
   enabled: true
@@ -42,6 +47,11 @@ audio:
   speaker: "plughw:3,0"
 
   mirror_output: false
+
+  silence_detection:
+    enabled: false
+    timeout: 1.5
+    threshold: 300
 
 interface:
 

@@ -1,12 +1,25 @@
 import subprocess
 
 
-def record(filename, microphone):
+def record(
+    filename,
+    microphone,
+    silence_enabled=False,
+    silence_timeout=1.5,
+    silence_threshold=300
+):
     """
-    Record audio until the user presses ENTER.
+    Record audio.
+
+    Currently the recording is stopped by pressing ENTER.
+    The silence detection parameters are reserved for the
+    next development step.
     """
 
-    print("Speak now. Press ENTER when you have finished.\n")
+    if silence_enabled:
+        print("Speak now. Recording will stop automatically.\n")
+    else:
+        print("Speak now. Press ENTER when you have finished.\n")
 
     rec = subprocess.Popen([
         "parecord",
