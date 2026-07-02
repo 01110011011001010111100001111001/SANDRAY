@@ -14,9 +14,9 @@ import time
 import subprocess
 import tempfile
 import yaml
+from speech.whisper import transcribe
 from ui.display import Display
 display = Display()
-from ui.display import Display
 
 # ==========================================================
 # Configuration
@@ -35,7 +35,7 @@ MODEL = cfg["speech"]["whisper"]["model"]
 PIPER = cfg["speech"]["piper"]["executable"]
 VOICE = cfg["speech"]["piper"]["voice"]
 
-MODEL_NAME = cfg["ai"]["model"]
+AICHAT = cfg["ai"]["executable"]
 
 WAKE_WORD = cfg["assistant"]["wake_word"]
 
@@ -95,21 +95,11 @@ while True:
 # Speech Recognition (Whisper)
 # ==========================================================
 
-    q = subprocess.check_output([
+    question = transcribe(
         WHISPER,
-        "-m",
         MODEL,
-        "-f",
-        "/tmp/question.wav",
-        "--no-timestamps"
-    ], text=True)
-
-    question = q.strip().split("\n")[-1]
-
-    display.divider()
-    display.user(question)
-
-    history.append("User: " + question)
+        "/tmp/question.wav"
+    )
 
 # ==========================================================
 # AI Processing

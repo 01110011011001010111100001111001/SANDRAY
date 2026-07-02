@@ -11,6 +11,7 @@ assistant:
 
 ai:
   provider: "openai"
+  executable: "/usr/local/bin/aichat"
   model: "gpt-5-mini"
   max_history: 20
 
