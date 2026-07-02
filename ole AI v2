@@ -1,0 +1,83 @@
+[1mdiff --git a/assistant.py b/assistant.py[m
+[1mindex 4630189..f34ea4c 100755[m
+[1m--- a/assistant.py[m
+[1m+++ b/assistant.py[m
+[36m@@ -6,6 +6,9 @@[m [mimport subprocess[m
+ import tempfile[m
+ import yaml[m
+ [m
+[32m+[m[32mfrom ui.display import Display[m
+[32m+[m[32mdisplay = Display()[m
+[32m+[m
+ # ----------------------------------------------------------[m
+ # Load configuration[m
+ # ----------------------------------------------------------[m
+[36m@@ -35,6 +38,8 @@[m [mhistory = [][m
+ turns = 0[m
+ [m
+ while True:[m
+[32m+[m[32m    display.clear()[m
+[32m+[m[32m    display.header(cfg["version"])[m
+ [m
+     os.system("clear")[m
+ [m
+[36m@@ -43,12 +48,17 @@[m [mwhile True:[m
+     print("=" * 60)[m
+     print()[m
+ [m
+[32m+[m[32m    display.status("READY")[m
+[32m+[m
+[32m+[m[32m    print()[m
+[32m+[m
+     x = input("ENTER=talk   q=quit : ")[m
+ [m
+     if x.lower() == "q":[m
+         break[m
+ [m
+[31m-    print("\n🎤 Listening...")[m
+[32m+[m[32m    display.status("LISTENING")[m
+[32m+[m
+     print("Press ENTER when finished.\n")[m
+ [m
+     rec = subprocess.Popen([[m
+[36m@@ -65,7 +75,7 @@[m [mwhile True:[m
+     rec.terminate()[m
+     rec.wait()[m
+ [m
+[31m-    print("🧠 Thinking...")[m
+[32m+[m[32m    display.status("THINKING")[m
+ [m
+     q = subprocess.check_output([[m
+         WHISPER,[m
+[36m@@ -78,8 +88,8 @@[m [mwhile True:[m
+ [m
+     question = q.strip().split("\n")[-1][m
+ [m
+[31m-    print("\nYOU:")[m
+[31m-    print(question)[m
+[32m+[m[32m    display.divider()[m
+[32m+[m[32m    display.user(question)[m
+ [m
+     history.append("User: " + question)[m
+ [m
+[36m@@ -106,10 +116,10 @@[m [mwhile True:[m
+         history = [][m
+         turns = 0[m
+ [m
+[31m-    print("\nAI:")[m
+[31m-    print(answer)[m
+[32m+[m[32m    display.divider()[m
+[32m+[m[32m    display.assistant(answer)[m
+ [m
+[31m-    print("\n🔊 Speaking...")[m
+[32m+[m[32m    display.status("SPEAKING")[m
+ [m
+     reply = tempfile.mktemp(suffix=".wav")[m
+ [m
+[36m@@ -151,5 +161,5 @@[m [mwhile True:[m
+     except:[m
+         pass[m
+ [m
+[31m-    print("\nDone.")[m
+[32m+[m[32m    display.status("READY")[m
+     input("Press ENTER for next question...")[m

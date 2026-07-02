@@ -6,6 +6,9 @@ import subprocess
 import tempfile
 import yaml
 
+from ui.display import Display
+display = Display()
+
 # ----------------------------------------------------------
 # Load configuration
 # ----------------------------------------------------------
@@ -35,12 +38,10 @@ history = []
 turns = 0
 
 while True:
+    display.clear()
+    display.header(cfg["version"])
+    display.status("READY")
 
-    os.system("clear")
-
-    print("=" * 60)
-    print("               uConsole AI v2")
-    print("=" * 60)
     print()
 
     x = input("ENTER=talk   q=quit : ")
@@ -48,7 +49,8 @@ while True:
     if x.lower() == "q":
         break
 
-    print("\n🎤 Listening...")
+    display.status("LISTENING")
+
     print("Press ENTER when finished.\n")
 
     rec = subprocess.Popen([
@@ -65,7 +67,7 @@ while True:
     rec.terminate()
     rec.wait()
 
-    print("🧠 Thinking...")
+    display.status("THINKING")
 
     q = subprocess.check_output([
         WHISPER,
@@ -78,8 +80,8 @@ while True:
 
     question = q.strip().split("\n")[-1]
 
-    print("\nYOU:")
-    print(question)
+    display.divider()
+    display.user(question)
 
     history.append("User: " + question)
 
@@ -106,10 +108,10 @@ while True:
         history = []
         turns = 0
 
-    print("\nAI:")
-    print(answer)
+    display.divider()
+    display.assistant(answer)
 
-    print("\n🔊 Speaking...")
+    display.status("SPEAKING")
 
     reply = tempfile.mktemp(suffix=".wav")
 
@@ -151,5 +153,5 @@ while True:
     except:
         pass
 
-    print("\nDone.")
+    display.status("READY")
     input("Press ENTER for next question...")
