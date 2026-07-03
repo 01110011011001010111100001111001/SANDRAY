@@ -5,7 +5,7 @@ Module:
     speech.piper
 
 Purpose:
-    Generates speech with Piper and plays it through ALSA.
+    Generates speech with Piper and plays it through PulseAudio.
 """
 
 import os
@@ -14,7 +14,7 @@ import tempfile
 import time
 
 
-POST_PLAYBACK_GUARD = 2.0
+POST_PLAYBACK_GUARD = 1.0
 
 
 def speak(
@@ -40,7 +40,7 @@ def speak(
 
     try:
         if log_level == "developer":
-            print("\n[PIPER] Starting speech synthesis...")
+            logger.log("PIPER", "Starting speech synthesis.")
 
         logger.start("PIPER")
 
@@ -65,10 +65,8 @@ def speak(
         try:
             subprocess.run(
                 [
-                    "aplay",
-                    "-q",
-                    "-D",
-                    speaker,
+                    "paplay",
+                    "--device=" + speaker,
                     reply
                 ],
                 check=True

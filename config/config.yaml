@@ -9,7 +9,7 @@ assistant:
   name: "SANDRAY"
 
 wake_word:
-  enabled: true
+  enabled: false
 
   phrases:
     - "SANDRAY"
@@ -51,11 +51,11 @@ speech:
 
 audio:
   wake:
-    delay: 3.5
+    delay: 8.0
 
   microphone: "alsa_input.usb-0b0e_Jabra_SPEAK_510_USB_70BF92550122021900-00.mono-fallback"
 
-  speaker: "plughw:3,0"
+  speaker: "alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_70BF92550122021900-00.analog-stereo"
 
   mirror_output: false
 
