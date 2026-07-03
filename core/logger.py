@@ -1,81 +1,86 @@
-"""
-SANDRAY
-
-Developer logger.
-"""
-
 import time
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich import box
+
+console = Console()
 
 
 class Logger:
-
-    def __init__(self, level="normal"):
+    def __init__(self, level="INFO"):
         self.level = level
-        self.timers = {}
-        self.results = {}
+        self.starts = {}
+        self.timings = {}
         self.stats = {}
 
-    def log(self, module, message):
-        if self.level != "developer":
-            return
-
-        print(f"[{module:<9}] {message}")
-
     def start(self, name):
-        if self.level != "developer":
-            return
-
-        self.timers[name] = time.perf_counter()
+        self.starts[name] = time.time()
 
     def stop(self, name):
-        if self.level != "developer":
-            return
+        if name in self.starts:
+            self.timings[name] = time.time() - self.starts[name]
 
-        if name not in self.timers:
-            return
-
-        self.results[name] = time.perf_counter() - self.timers[name]
-        del self.timers[name]
+    def log(self, name, message):
+        if self.level == "DEBUG":
+            console.print(f"[dim]{name}: {message}[/dim]")
 
     def stat(self, name, value):
-        if self.level != "developer":
-            return
-
         self.stats[name] = value
 
     def summary(self):
-        if self.level != "developer":
-            return
+        table = Table(
+            expand=True,
+            box=box.SIMPLE,
+            show_header=True,
+            header_style="bold red",
+        )
 
-        print()
-        print("-" * 60)
-        print("PERFORMANCE")
-        print()
+        table.add_column("PROCESS", style="white", no_wrap=True)
+        table.add_column("TIME", justify="right", style="white", no_wrap=True)
+        table.add_column("DETAIL", style="white")
 
-        measured_total = self.results.get("TOTAL")
+        order = [
+            "WAKE_WORD",
+            "RECORDER",
+            "WHISPER",
+            "AI",
+            "PIPER",
+            "PLAYBACK",
+            "TOTAL",
+        ]
 
-        for name, value in self.results.items():
-            if name == "TOTAL":
-                continue
+        found = False
 
-            print(f"{name:<10} {value:7.2f} s")
+        for name in order:
+            if name in self.timings:
+                found = True
+                label = name
+                elapsed = f"{self.timings[name]:.2f} s"
 
-        if self.stats:
-            print()
+                if name == "TOTAL":
+                    label = "[bold red]TOTAL[/bold red]"
+                    elapsed = f"[bold red]{elapsed}[/bold red]"
 
-            for name, value in self.stats.items():
-                print(f"{name:<10} {value}")
+                table.add_row(label, elapsed, "[green]OK[/green]")
 
-        print()
+        for name, value in self.stats.items():
+            found = True
+            table.add_row(str(name), "", str(value))
 
-        if measured_total is not None:
-            print(f"{'TOTAL':<10} {measured_total:7.2f} s")
-        else:
-            total = sum(self.results.values())
-            print(f"{'TOTAL':<10} {total:7.2f} s")
+        if not found:
+            table.add_row("SYSTEM", "", "No performance data recorded.")
 
-        print("-" * 60)
-
-        self.timers.clear()
-        self.results.clear()
-        self.stats.clear()
+        console.print()
+        console.print(
+            Panel(
+                table,
+                title="PERFORMANCE",
+                title_align="left",
+                border_style="red",
+                box=box.SQUARE,
+                padding=(1, 2),
+                expand=True,
+            )
+        )
