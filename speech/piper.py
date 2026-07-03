@@ -1,46 +1,90 @@
+"""
+SANDRAY
+
+Module:
+    speech.piper
+
+Purpose:
+    Generates speech with Piper and plays it through ALSA.
+"""
+
+import os
 import subprocess
 import tempfile
 import time
-import os
 
 
-def speak(text, piper, voice, speaker, log_level="normal"):
-    """
-    Generate speech with Piper and play it.
-    """
+POST_PLAYBACK_GUARD = 2.0
 
-    reply = tempfile.mktemp(suffix=".wav")
 
-    if log_level == "developer":
-        print("\n[PIPER] Starting speech synthesis...")
+def speak(
+    answer,
+    piper,
+    voice,
+    speaker,
+    log_level,
+    wake_delay,
+    logger
+):
+    """Generate and play speech synchronously."""
 
-    subprocess.run([
-        piper,
-        "--model",
-        voice,
-        "--output_file",
-        reply
-    ], input=text, text=True, check=True)
+    del wake_delay
 
-    time.sleep(0.5)
+    handle = tempfile.NamedTemporaryFile(
+        suffix=".wav",
+        delete=False
+    )
 
-    if log_level == "developer":
-        print("[PIPER] Waking USB speaker...")
+    reply = handle.name
+    handle.close()
 
-    subprocess.run([
-        "aplay",
-        "-q",
-        "-D",
-        speaker,
-        "/usr/share/sounds/alsa/Front_Center.wav"
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        if log_level == "developer":
+            print("\n[PIPER] Starting speech synthesis...")
 
-    subprocess.run([
-        "aplay",
-        "-q",
-        "-D",
-        speaker,
-        reply
-    ], check=True)
+        logger.start("PIPER")
 
-    os.remove(reply)
+        try:
+            subprocess.run(
+                [
+                    piper,
+                    "--model",
+                    voice,
+                    "--output_file",
+                    reply
+                ],
+                input=answer,
+                text=True,
+                check=True
+            )
+        finally:
+            logger.stop("PIPER")
+
+        logger.start("PLAYBACK")
+
+        try:
+            subprocess.run(
+                [
+                    "aplay",
+                    "-q",
+                    "-D",
+                    speaker,
+                    reply
+                ],
+                check=True
+            )
+        finally:
+            logger.stop("PLAYBACK")
+
+        logger.log(
+            "PLAYBACK",
+            "Speech playback complete."
+        )
+
+        time.sleep(POST_PLAYBACK_GUARD)
+
+    finally:
+        try:
+            os.remove(reply)
+        except FileNotFoundError:
+            pass

@@ -3,11 +3,20 @@
 # Version 2.0 Alpha
 # ==========================================================
 
-version: "2.0-alpha1"
+version: "2.0-alpha2"
 
 assistant:
   name: "SANDRAY"
-  wake_word: "SANDRAY"
+
+wake_word:
+  enabled: true
+
+  phrases:
+    - "SANDRAY"
+    - "sand ray"
+
+  silence_timeout: 0.8
+  silence_threshold: 300
 
 ai:
   provider: "openai"
@@ -41,6 +50,8 @@ speech:
     voice: "/home/richard/piper/en_GB-alan-medium.onnx"
 
 audio:
+  wake:
+    delay: 3.5
 
   microphone: "alsa_input.usb-0b0e_Jabra_SPEAK_510_USB_70BF92550122021900-00.mono-fallback"
 
@@ -49,20 +60,16 @@ audio:
   mirror_output: false
 
   silence_detection:
-    enabled: false
+    enabled: true
     timeout: 1.5
     threshold: 300
 
 interface:
-
   theme: "colour"
-
   developer_mode: false
 
 logging:
-
-  level: "normal"
+  level: "developer"
 
 system:
-
   auto_restart: true

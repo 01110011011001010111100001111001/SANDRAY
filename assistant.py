@@ -5,145 +5,284 @@
 # Version 2.0-alpha2
 # ==========================================================
 
-# ==========================================================
-# Imports
-# ==========================================================
-
 import os
-import time
-import subprocess
-import tempfile
+
 import yaml
 
 from ai.chat import ask
-from audio.recorder import record
-from speech.whisper import transcribe
-from speech.piper import speak
-from ai.prompt import build_prompt
 from ai.memory import Memory
+from ai.prompt import build_prompt
+from audio.recorder import record
+from core.logger import Logger
+from speech.piper import speak
+from speech.wake_word import wait_for_wake_word
+from speech.whisper import transcribe
 from ui.display import Display
 
-display = Display()
 
-# ==========================================================
-# Configuration
-# ==========================================================
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
-with open("config/config.yaml", "r") as f:
-    cfg = yaml.safe_load(f)
+CONFIG_FILE = os.path.join(
+    BASE_DIR,
+    "config",
+    "config.yaml"
+)
 
-MIC = cfg["audio"]["microphone"]
+QUESTION_FILE = "/tmp/question.wav"
 
-SPEAKER = cfg["audio"]["speaker"]
-SILENCE_ENABLED = cfg["audio"]["silence_detection"]["enabled"]
-SILENCE_TIMEOUT = cfg["audio"]["silence_detection"]["timeout"]
-SILENCE_THRESHOLD = cfg["audio"]["silence_detection"]["threshold"]
 
-WHISPER = cfg["speech"]["whisper"]["executable"]
-MODEL = cfg["speech"]["whisper"]["model"]
+def load_config():
+    with open(
+        CONFIG_FILE,
+        "r",
+        encoding="utf-8"
+    ) as handle:
+        return yaml.safe_load(handle)
 
-PIPER = cfg["speech"]["piper"]["executable"]
-VOICE = cfg["speech"]["piper"]["voice"]
 
-AICHAT = cfg["ai"]["executable"]
-MAX_WORDS = cfg["ai"]["response"]["max_words"]
-RESPONSE_STYLE = cfg["ai"]["response"]["style"]
-ALLOW_MARKDOWN = cfg["ai"]["response"]["markdown"]
-PERSONALITY = cfg["ai"]["personality"]
+def main():
+    cfg = load_config()
+    display = Display()
 
-WAKE_WORD = cfg["assistant"]["wake_word"]
+    microphone = cfg["audio"]["microphone"]
+    speaker = cfg["audio"]["speaker"]
 
-THEME = cfg["interface"]["theme"]
+    silence = cfg["audio"]["silence_detection"]
 
-LOG_LEVEL = cfg["logging"]["level"]
+    silence_enabled = silence["enabled"]
+    silence_timeout = silence["timeout"]
+    silence_threshold = silence["threshold"]
 
-MEMORY_ENABLED = cfg["memory"]["enabled"]
-MEMORY_MAX_TURNS = cfg["memory"]["max_turns"]
+    whisper = cfg["speech"]["whisper"]["executable"]
+    model = cfg["speech"]["whisper"]["model"]
 
-# ==========================================================
-# Global State
-# ==========================================================
+    piper = cfg["speech"]["piper"]["executable"]
+    voice = cfg["speech"]["piper"]["voice"]
 
-memory = Memory(
-    max_turns=MEMORY_MAX_TURNS,
-    enabled=MEMORY_ENABLED)
+    aichat = cfg["ai"]["executable"]
 
-# ==========================================================
-# Main Application Loop
-# ==========================================================
-
-while True:
-    display.clear()
-    display.header(cfg["version"])
-    display.status("READY")
-
-    print()
-
-    x = input("ENTER=talk   q=quit : ")
-
-    if x.lower() == "q":
-        break
-
-    display.status("LISTENING")
-    print()
-
-# ==========================================================
-# Audio Recording
-# ==========================================================
-
-    record(
-        "/tmp/question.wav",
-        MIC,
-        SILENCE_ENABLED,
-        SILENCE_TIMEOUT,
-        SILENCE_THRESHOLD
+    max_words = (
+        cfg["ai"]["response"]["max_words"]
     )
 
-# ==========================================================
-# Speech Recognition (Whisper)
-# ==========================================================
-
-    question = transcribe(
-        WHISPER,
-        MODEL,
-        "/tmp/question.wav"
+    response_style = (
+        cfg["ai"]["response"]["style"]
     )
 
-# ==========================================================
-# AI Processing
-# ==========================================================
-
-    prompt = build_prompt(
-        personality=PERSONALITY,
-        response_style=RESPONSE_STYLE,
-        max_words=MAX_WORDS,
-        allow_markdown=ALLOW_MARKDOWN,
-        memory=memory
+    allow_markdown = (
+        cfg["ai"]["response"]["markdown"]
     )
 
-    answer = ask(
-        AICHAT,
-        prompt
+    personality = cfg["ai"]["personality"]
+
+    wake = cfg["wake_word"]
+
+    wake_enabled = wake["enabled"]
+    wake_phrases = wake["phrases"]
+
+    wake_silence_timeout = (
+        wake["silence_timeout"]
     )
 
-    memory.add_assistant(answer)
-
-    display.divider()
-    display.assistant(answer)
-
-    display.status("SPEAKING")
-
-# ==========================================================
-# Speech Synthesis / Playback
-# ==========================================================
-
-    speak(
-        answer,
-        PIPER,
-        VOICE,
-        SPEAKER,
-        LOG_LEVEL
+    wake_silence_threshold = (
+        wake["silence_threshold"]
     )
-    display.status("READY")
-    input("Press ENTER for next question...")
 
+    wake_delay = cfg["audio"]["wake"]["delay"]
+    log_level = cfg["logging"]["level"]
+
+    memory = Memory(
+        max_turns=cfg["memory"]["max_turns"],
+        enabled=cfg["memory"]["enabled"]
+    )
+
+    logger = Logger(log_level)
+
+    try:
+        while True:
+            display.clear()
+            display.header(cfg["version"])
+            display.status("READY")
+
+            print()
+
+            inline_question = ""
+
+            if wake_enabled:
+                primary_phrase = wake_phrases[0]
+
+                print(
+                    f'Say "{primary_phrase}" '
+                    "or press Ctrl+C to quit."
+                )
+
+                logger.start("WAKE_WORD")
+
+                inline_question = wait_for_wake_word(
+                    microphone,
+                    whisper,
+                    model,
+                    wake_phrases,
+                    wake_silence_timeout,
+                    wake_silence_threshold
+                )
+
+                logger.stop("WAKE_WORD")
+
+                logger.log(
+                    "WAKE_WORD",
+                    "Wake phrase recognised."
+                )
+
+            else:
+                choice = input(
+                    "ENTER=talk   q=quit : "
+                )
+
+                if choice.lower() == "q":
+                    break
+
+            logger.start("TOTAL")
+
+            if inline_question:
+                question = inline_question
+
+                logger.log(
+                    "WHISPER",
+                    "Question captured with wake phrase."
+                )
+
+            else:
+                display.status("LISTENING")
+
+                print()
+
+                logger.start("RECORDER")
+
+                record(
+                    QUESTION_FILE,
+                    microphone,
+                    silence_enabled,
+                    silence_timeout,
+                    silence_threshold
+                )
+
+                logger.stop("RECORDER")
+
+                logger.log(
+                    "RECORDER",
+                    "Recording complete."
+                )
+
+                logger.start("WHISPER")
+
+                question = transcribe(
+                    whisper,
+                    model,
+                    QUESTION_FILE
+                )
+
+                logger.stop("WHISPER")
+
+            question = question.strip()
+
+            if not question:
+                logger.stop("TOTAL")
+
+                logger.log(
+                    "WHISPER",
+                    "No question was recognised."
+                )
+
+                logger.summary()
+                continue
+
+            logger.log(
+                "WHISPER",
+                f"Recognised: {question}"
+            )
+
+            display.divider()
+            display.user(question)
+
+            memory.add_user(question)
+
+            logger.stat(
+                "INPUT",
+                f"{len(question.split())} words"
+            )
+
+            prompt = build_prompt(
+                personality=personality,
+                response_style=response_style,
+                max_words=max_words,
+                allow_markdown=allow_markdown,
+                memory=memory
+            )
+
+            logger.log(
+                "PROMPT",
+                "Prompt built."
+            )
+
+            logger.start("AI")
+
+            answer = ask(
+                aichat,
+                prompt
+            )
+
+            logger.stop("AI")
+
+            logger.log(
+                "AI",
+                (
+                    "Response length: "
+                    f"{len(answer.split())} words."
+                )
+            )
+
+            memory.add_assistant(answer)
+
+            logger.stat(
+                "OUTPUT",
+                f"{len(answer.split())} words"
+            )
+
+            display.divider()
+            display.assistant(answer)
+            display.status("SPEAKING")
+
+            logger.log(
+                "PIPER",
+                "Generating speech."
+            )
+
+            speak(
+                answer,
+                piper,
+                voice,
+                speaker,
+                log_level,
+                wake_delay,
+                logger
+            )
+
+            logger.stop("TOTAL")
+
+            display.status("READY")
+            logger.summary()
+
+            if not wake_enabled:
+                input(
+                    "Press ENTER for next question..."
+                )
+
+    except KeyboardInterrupt:
+        print("\nSANDRAY stopped.")
+
+
+if __name__ == "__main__":
+    main()
