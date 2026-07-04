@@ -33,3 +33,24 @@ All notable changes to SANDRAY will be documented in this file.
 - Initial project structure
 - Git repository
 - GitHub repository
+
+---
+
+## v2.0-alpha2 (continued)
+
+### Added (post-initial alpha2 stabilization)
+
+- Introduced centralized subprocess execution layer (`core.process.run_process`)
+- Structured AI memory model using role/content objects
+- Refactored prompt builder into section-based composition system
+- Added configuration validation layer (`config/loader.py`)
+- Clarified UI ownership: Display now fully responsible for rendering
+- Decoupled logging from UI rendering responsibilities
+
+### Internal Improvements
+
+- Standardized external process execution (Whisper, Piper, AI backend)
+- Improved module isolation and testability
+- Strengthened separation between AI logic, memory, and prompt construction
+- Improved runtime logging consistency through centralized process layer
+
