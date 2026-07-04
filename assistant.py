@@ -99,6 +99,7 @@ def main():
     )
 
     logger = Logger(log_level)
+    display.attach_logger(logger)
 
     pending_question = ""
 
