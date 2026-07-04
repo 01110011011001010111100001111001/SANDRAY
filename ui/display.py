@@ -9,7 +9,6 @@ from rich.text import Text
 from rich import box
 
 from core.process import get_verbose_lines
-from core.logger import get_performance_panel
 
 
 console = Console()
@@ -104,25 +103,30 @@ class Display:
     def _render(self):
         console.clear()
 
-        top = Table.grid(expand=True)
-        top.add_column(ratio=1)
-        top.add_column(ratio=1)
-        top.add_row(
-            self._assistant_panel(),
-            self._status_panel(),
+        console.print(
+            self._two_panel_row(
+                self._assistant_panel(),
+                self._status_panel(),
+            )
         )
 
-        lower = Table.grid(expand=True)
-        lower.add_column(ratio=1)
-        lower.add_column(ratio=1)
-        lower.add_row(
-            self._verbose_panel(),
-            self._performance_panel(),
+        console.print(
+            self._conversation_panel()
         )
 
-        console.print(top)
-        console.print(self._conversation_panel())
-        console.print(lower)
+        console.print(
+            self._two_panel_row(
+                self._verbose_panel(),
+                self._performance_panel(),
+            )
+        )
+
+    def _two_panel_row(self, left, right):
+        table = Table.grid(expand=True)
+        table.add_column(ratio=1)
+        table.add_column(ratio=1)
+        table.add_row(left, right)
+        return table
 
     def _assistant_panel(self):
         grid = Table.grid(expand=True)
@@ -271,11 +275,14 @@ class Display:
         found = False
 
         if self.logger is not None:
+            timings = self.logger.get_timings()
+            stats = self.logger.get_stats()
+
             for name in order:
-                if name in self.logger.timings:
+                if name in timings:
                     found = True
                     label = name
-                    elapsed = f"{self.logger.timings[name]:.2f} s"
+                    elapsed = f"{timings[name]:.2f} s"
 
                     if name == "TOTAL":
                         label = "[bold red]TOTAL[/bold red]"
@@ -283,7 +290,7 @@ class Display:
 
                     table.add_row(label, elapsed, "[green]OK[/green]")
 
-            for name, value in self.logger.stats.items():
+            for name, value in stats.items():
                 found = True
                 table.add_row(str(name), "", str(value))
 

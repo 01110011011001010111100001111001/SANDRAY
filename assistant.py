@@ -99,6 +99,7 @@ def main():
     )
 
     logger = Logger(log_level)
+    display.attach_logger(logger)
 
     pending_question = ""
 
@@ -211,7 +212,6 @@ def main():
                     "No question was recognised."
                 )
 
-                logger.summary()
                 continue
 
             logger.log(
@@ -287,7 +287,6 @@ def main():
 
             logger.stop("TOTAL")
 
-            logger.summary()
             display.status("READY")
 
             if not wake_enabled:

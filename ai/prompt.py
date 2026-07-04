@@ -16,23 +16,27 @@ def build_prompt(
     allow_markdown,
     memory
 ):
-    """
-    Build the prompt sent to the AI.
-    """
+    """Build the prompt sent to the AI."""
 
-    prompt = personality.strip() + "\n\n"
-
-    prompt += (
-        f"Respond as {response_style}.\n"
-        f"Keep your reply under approximately {max_words} words.\n"
-        "Always finish your final sentence naturally.\n"
-    )
+    sections = [
+        personality.strip(),
+        "",
+        f"Respond as {response_style}.",
+        f"Keep your reply under approximately {max_words} words.",
+        "Always finish your final sentence naturally.",
+    ]
 
     if not allow_markdown:
-        prompt += "Never use markdown.\n"
+        sections.append("Never use markdown.")
 
-    prompt += "\n"
+    history = memory.prompt()
 
-    prompt += memory.prompt()
+    if history:
+        sections.extend(
+            [
+                "",
+                history,
+            ]
+        )
 
-    return prompt
+    return "\n".join(sections)
