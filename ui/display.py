@@ -8,6 +8,10 @@ from rich.table import Table
 from rich.text import Text
 from rich import box
 
+from core.process import get_verbose_lines
+from core.logger import get_performance_panel
+
+
 console = Console()
 
 
@@ -17,7 +21,7 @@ class Display:
         self.current_status = "READY"
         self.mode = "MANUAL MODE"
         self.history = []
-        self.logs = []
+        self.logger = None
 
         self.theme = {
             "brand": "bold cyan",
@@ -30,12 +34,14 @@ class Display:
             "user": "bold green",
             "assistant": "bold cyan",
             "instruction": "bold yellow",
-            "border": "cyan",
-            "conversation": "blue",
-            "performance": "red",
-            "footer": "dim",
-            "log": "white",
+            "assistant_border": "cyan",
+            "status_border": "green",
+            "conversation_border": "blue",
+            "verbose_border": "magenta",
         }
+
+    def attach_logger(self, logger):
+        self.logger = logger
 
     def clear(self):
         console.clear()
@@ -49,27 +55,28 @@ class Display:
         self._render()
 
     def instruction(self, text):
-        self.history.append(self._entry("INSTRUCTION", text, self.theme["instruction"]))
+        self.history.append(
+            self._entry("INSTRUCTION", text, self.theme["instruction"])
+        )
         self._render()
 
     def divider(self):
         self._render()
 
     def user(self, text):
-        self.history.append(self._entry("YOU", text, self.theme["user"]))
+        self.history.append(
+            self._entry("YOU", text, self.theme["user"])
+        )
         self._render()
 
     def assistant(self, text):
-        self.history.append(self._entry("SANDRAY", text, self.theme["assistant"]))
+        self.history.append(
+            self._entry("SANDRAY", text, self.theme["assistant"])
+        )
         self._render()
 
     def footer(self):
-        self._render()
-
-    def log(self, subsystem, message):
-        self.logs.append((self._clock(), str(subsystem), str(message)))
-        self.logs = self.logs[-8:]
-        self._render()
+        pass
 
     def set_mode(self, mode):
         self.mode = str(mode).upper()
@@ -78,7 +85,11 @@ class Display:
     def error(self, subsystem, message):
         self.current_status = "ERROR"
         self.history.append(
-            self._entry("ERROR", f"{subsystem}: {message}", self.theme["error"])
+            self._entry(
+                "ERROR",
+                f"{subsystem}: {message}",
+                self.theme["error"],
+            )
         )
         self._render()
 
@@ -92,12 +103,28 @@ class Display:
 
     def _render(self):
         console.clear()
-        console.print(self._header_panel())
-        console.print(self._status_panel())
-        console.print(self._conversation_panel())
-        console.print(self._footer_panel())
 
-    def _header_panel(self):
+        top = Table.grid(expand=True)
+        top.add_column(ratio=1)
+        top.add_column(ratio=1)
+        top.add_row(
+            self._assistant_panel(),
+            self._status_panel(),
+        )
+
+        lower = Table.grid(expand=True)
+        lower.add_column(ratio=1)
+        lower.add_column(ratio=1)
+        lower.add_row(
+            self._verbose_panel(),
+            self._performance_panel(),
+        )
+
+        console.print(top)
+        console.print(self._conversation_panel())
+        console.print(lower)
+
+    def _assistant_panel(self):
         grid = Table.grid(expand=True)
         grid.add_column(justify="left", ratio=1)
         grid.add_column(justify="right")
@@ -109,7 +136,9 @@ class Display:
 
         return Panel(
             grid,
-            border_style=self.theme["border"],
+            title="ASSISTANT",
+            title_align="left",
+            border_style=self.theme["assistant_border"],
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
@@ -121,20 +150,23 @@ class Display:
 
         grid = Table.grid(expand=True)
         grid.add_column(justify="left", ratio=1)
-        grid.add_column(justify="center", ratio=1)
-        grid.add_column(justify="right", ratio=1)
+        grid.add_column(justify="right")
 
         grid.add_row(
-            Text(f"STATUS  {status}", style=f"bold {style}"),
-            Text(self.mode, style=self.theme["muted"]),
-            Text(self._clock(), style=self.theme["muted"]),
+            Text(status, style=f"bold {style}"),
+            Text(
+                self._clock(),
+                style=self.theme["muted"]
+            ),
         )
 
         return Panel(
             grid,
+            title="STATUS",
+            title_align="left",
             border_style=style,
             box=box.SQUARE,
-            padding=(0, 2),
+            padding=(1, 2),
             expand=True,
         )
 
@@ -145,14 +177,23 @@ class Display:
         if not self.history:
             table.add_row(
                 Align.left(
-                    Text("Ready for a typed or spoken request.", style=self.theme["muted"])
+                    Text(
+                        "Ready for a typed or spoken request.",
+                        style=self.theme["muted"],
+                    )
                 )
             )
         else:
-            for entry in self.history[-8:]:
+            conversation = [
+                entry for entry in self.history
+                if entry["speaker"] in ("YOU", "SANDRAY")
+            ]
+
+            for entry in conversation[-8:]:
                 header = Table.grid(expand=True)
                 header.add_column(justify="left", ratio=1)
                 header.add_column(justify="right")
+
                 header.add_row(
                     Text(entry["speaker"], style=entry["style"]),
                     Text(entry["time"], style=self.theme["muted"]),
@@ -166,27 +207,101 @@ class Display:
             table,
             title="CONVERSATION",
             title_align="left",
-            border_style=self.theme["conversation"],
+            border_style=self.theme["conversation_border"],
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
         )
 
-    def _footer_panel(self):
-        grid = Table.grid(expand=True)
-        grid.add_column(justify="left", ratio=1)
-        grid.add_column(justify="right")
+    def _verbose_panel(self):
+        lines = get_verbose_lines()
 
-        grid.add_row(
-            Text("ENTER=talk   q=quit", style=self.theme["footer"]),
-            Text("local-first assistant", style=self.theme["footer"]),
+        if not lines:
+            lines = ["No technical output captured."]
+
+        lines = lines[-10:]
+
+        table = Table(
+            expand=True,
+            box=box.SIMPLE,
+            show_header=True,
+            header_style="bold magenta",
         )
 
+        table.add_column("OUTPUT", style="dim")
+
+        for line in lines:
+            table.add_row(str(line))
+
+        while len(table.rows) < 10:
+            table.add_row("")
+
         return Panel(
-            grid,
-            border_style="dim",
+            table,
+            title="ENGINE",
+            title_align="left",
+            border_style=self.theme["verbose_border"],
             box=box.SQUARE,
-            padding=(0, 2),
+            padding=(1, 2),
+            expand=True,
+        )
+
+    def _performance_panel(self):
+        table = Table(
+            expand=True,
+            box=box.SIMPLE,
+            show_header=True,
+            header_style="bold red",
+        )
+
+        table.add_column("PROCESS", style="white", no_wrap=True)
+        table.add_column("TIME", justify="right", style="white", no_wrap=True)
+        table.add_column("DETAIL", style="white")
+
+        order = [
+            "WAKE_WORD",
+            "RECORDER",
+            "WHISPER",
+            "AI",
+            "PIPER",
+            "PLAYBACK",
+            "TOTAL",
+        ]
+
+        found = False
+
+        if self.logger is not None:
+            for name in order:
+                if name in self.logger.timings:
+                    found = True
+                    label = name
+                    elapsed = f"{self.logger.timings[name]:.2f} s"
+
+                    if name == "TOTAL":
+                        label = "[bold red]TOTAL[/bold red]"
+                        elapsed = f"[bold red]{elapsed}[/bold red]"
+
+                    table.add_row(label, elapsed, "[green]OK[/green]")
+
+            for name, value in self.logger.stats.items():
+                found = True
+                table.add_row(str(name), "", str(value))
+
+        if not found:
+            table.add_row("SYSTEM", "", "Waiting for first completed turn.")
+
+        ROWS = 10
+
+        while len(table.rows) < ROWS:
+            table.add_row("", "", "")
+
+        return Panel(
+            table,
+            title="PERFORMANCE",
+            title_align="left",
+            border_style="red",
+            box=box.SQUARE,
+            padding=(1, 2),
             expand=True,
         )
 

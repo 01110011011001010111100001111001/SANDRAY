@@ -100,6 +100,8 @@ def main():
 
     logger = Logger(log_level)
 
+    pending_question = ""
+
     try:
         while True:
             display.clear()
@@ -109,6 +111,8 @@ def main():
             print()
 
             inline_question = ""
+            typed_question = pending_question
+            pending_question = ""
 
             if wake_enabled:
                 primary_phrase = wake_phrases[0]
@@ -137,16 +141,27 @@ def main():
                 )
 
             else:
-                choice = input(
-                    "ENTER=talk   q=quit : "
-                )
+                if not typed_question:
+                    choice = input(
+                        "ENTER=talk   q=quit : "
+                    )
 
-                if choice.lower() == "q":
-                    break
+                    if choice.lower() == "q":
+                        break
+
+                    typed_question = choice.strip()
 
             logger.start("TOTAL")
 
-            if inline_question:
+            if typed_question:
+                question = typed_question
+
+                logger.log(
+                    "INPUT",
+                    "Question entered manually."
+                )
+
+            elif inline_question:
                 question = inline_question
 
                 logger.log(
@@ -272,13 +287,18 @@ def main():
 
             logger.stop("TOTAL")
 
-            display.status("READY")
             logger.summary()
+            display.status("READY")
 
             if not wake_enabled:
-                input(
-                    "Press ENTER for next question..."
+                choice = input(
+                    "ENTER=talk   type=follow-up   q=quit : "
                 )
+
+                if choice.lower() == "q":
+                    break
+
+                pending_question = choice.strip()
 
     except KeyboardInterrupt:
         print("\nSANDRAY stopped.")

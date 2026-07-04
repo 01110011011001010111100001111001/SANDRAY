@@ -10,6 +10,8 @@ Purpose:
 
 import subprocess
 
+from core.process import run_process
+
 
 def transcribe(
     whisper,
@@ -18,6 +20,8 @@ def transcribe(
     quiet=False
 ):
     """Transcribe a WAV file and return recognised text."""
+
+    del quiet
 
     command = [
         whisper,
@@ -29,18 +33,7 @@ def transcribe(
     ]
 
     try:
-        result = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=(
-                subprocess.PIPE
-                if quiet
-                else None
-            ),
-            text=True,
-            errors="replace",
-            check=True
-        )
+        result = run_process(command)
 
     except FileNotFoundError as error:
         raise RuntimeError(
@@ -50,10 +43,10 @@ def transcribe(
     except subprocess.CalledProcessError as error:
         detail = ""
 
-        if quiet and error.stderr:
+        if error.output:
             lines = [
                 line.strip()
-                for line in error.stderr.splitlines()
+                for line in error.output.splitlines()
                 if line.strip()
             ]
 

@@ -61,7 +61,7 @@ audio:
 
   silence_detection:
     enabled: true
-    timeout: 1.5
+    timeout: 10.0
     threshold: 300
 
 interface:

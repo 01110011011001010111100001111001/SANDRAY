@@ -9,9 +9,10 @@ Purpose:
 """
 
 import os
-import subprocess
 import tempfile
 import time
+
+from core.process import run_process
 
 
 POST_PLAYBACK_GUARD = 1.0
@@ -28,6 +29,7 @@ def speak(
 ):
     """Generate and play speech synchronously."""
 
+    del log_level
     del wake_delay
 
     handle = tempfile.NamedTemporaryFile(
@@ -39,13 +41,10 @@ def speak(
     handle.close()
 
     try:
-        if log_level == "developer":
-            logger.log("PIPER", "Starting speech synthesis.")
-
         logger.start("PIPER")
 
         try:
-            subprocess.run(
+            run_process(
                 [
                     piper,
                     "--model",
@@ -53,9 +52,7 @@ def speak(
                     "--output_file",
                     reply
                 ],
-                input=answer,
-                text=True,
-                check=True
+                input_text=answer,
             )
         finally:
             logger.stop("PIPER")
@@ -63,13 +60,12 @@ def speak(
         logger.start("PLAYBACK")
 
         try:
-            subprocess.run(
+            run_process(
                 [
                     "paplay",
                     "--device=" + speaker,
                     reply
-                ],
-                check=True
+                ]
             )
         finally:
             logger.stop("PLAYBACK")
