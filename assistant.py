@@ -212,7 +212,6 @@ def main():
                     "No question was recognised."
                 )
 
-                logger.summary()
                 continue
 
             logger.log(
@@ -288,7 +287,6 @@ def main():
 
             logger.stop("TOTAL")
 
-            logger.summary()
             display.status("READY")
 
             if not wake_enabled:
