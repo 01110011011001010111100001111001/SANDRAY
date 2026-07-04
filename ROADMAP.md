@@ -2,9 +2,11 @@
 
 ## Goal
 
-SANDRAY is a local-first voice assistant for Raspberry Pi 4.
+SANDRAY is a local-first voice assistant designed for the uConsole.
 
 It should feel reliable, calm, and appliance-like.
+
+---
 
 ## Architecture
 
@@ -18,50 +20,82 @@ modules only
 
 Modules:
 
-- `audio/` handles recording and audio capture
-- `speech/` handles wake word, Whisper, and Piper
-- `ai/` handles prompts, memory, and model calls
-- `ui/` handles terminal presentation only
-- `core/` handles logging and shared control utilities
+- audio/ → recording and capture
+- speech/ → wake word, Whisper, Piper
+- ai/ → memory, prompt, chat
+- ui/ → terminal rendering only
+- core/ → execution + logging utilities
+
+---
 
 ## Entry Point Rule
 
-`assistant.py` should eventually be under 100 lines.
+assistant.py must remain minimal and act only as a coordinator.
 
-It should not contain business logic, UI formatting, audio logic, speech logic, or AI logic.
+It should not contain:
+- business logic
+- UI rendering
+- audio logic
+- speech logic
+- AI logic
+
+---
+
+## Current Phase
+
+### M03 — COMPLETE
+- AI chat subsystem
+- memory system (structured model)
+- prompt builder (section-based)
+
+---
+
+### M04 — PLATFORM HARDENING (ACTIVE)
+
+Focus:
+- configuration loader (`config/loader.py`)
+- system startup stability
+- execution consistency via core.process
+- improved diagnostics and logging
+
+---
+
+### M05 — ADAPTIVE UI (DEFINED)
+
+Focus:
+- uConsole landscape-first layout
+- portrait fallback (stacked layout)
+- performance panel alignment (UI-006)
+- engine header reduction (UI-005)
+- open source footer panel (UI-007)
+- terminal geometry adaptation (UI-008)
+
+---
 
 ## Frozen Areas
 
-Do not change these unless explicitly agreed:
+The following subsystems should remain stable unless explicitly agreed:
 
-- audio playback
-- microphone capture
-- Piper
-- Whisper
-- wake-word architecture
+- audio capture pipeline
+- whisper integration
+- piper synthesis
 
-## Current Priority
-
-Improve only the Rich terminal UI.
+---
 
 ## UI Principles
 
-The interface should be:
+- prioritize conversation visibility
+- minimize vertical waste
+- stable panel layout
+- adaptive rendering based on terminal size
+- designed for small handheld screens
 
-- full-width
-- left-aligned
-- calm and professional
-- colour-coded but not noisy
-- readable at different terminal widths
-- suitable for daily use
-- clear about system state
+---
 
 ## Working Rules
 
-- Think first, code second
-- One complete change at a time
-- No speculative fixes
-- Preserve backwards compatibility
-- Minimise file changes
-- Do not redesign architecture without agreement
-- Prefer terminal commands over manual edits
+- think before changing architecture
+- one change at a time
+- no speculative refactors
+- preserve backward compatibility
+- prefer atomic commits
