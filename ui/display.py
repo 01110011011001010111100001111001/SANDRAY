@@ -100,6 +100,12 @@ class Display:
             "style": style,
         }
 
+    def _active_conversation(self):
+        return [
+            entry for entry in self.history
+            if entry["speaker"] in ("YOU", "SANDRAY")
+        ]
+
     def _render(self):
         console.clear()
 
@@ -110,9 +116,7 @@ class Display:
             )
         )
 
-        console.print(
-            self._conversation_panel()
-        )
+        console.print(self._conversation_panel())
 
         console.print(
             self._two_panel_row(
@@ -158,10 +162,7 @@ class Display:
 
         grid.add_row(
             Text(status, style=f"bold {style}"),
-            Text(
-                self._clock(),
-                style=self.theme["muted"]
-            ),
+            Text(self._clock(), style=self.theme["muted"]),
         )
 
         return Panel(
@@ -188,10 +189,7 @@ class Display:
                 )
             )
         else:
-            conversation = [
-                entry for entry in self.history
-                if entry["speaker"] in ("YOU", "SANDRAY")
-            ]
+            conversation = self._active_conversation()
 
             for entry in conversation[-8:]:
                 header = Table.grid(expand=True)
