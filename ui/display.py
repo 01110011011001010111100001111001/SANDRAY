@@ -143,8 +143,10 @@ class Display:
             self._verbose_panel(),
             self._performance_panel(),
         ))
-
-    # ---------------- PANEL SYSTEM ----------------
+        console.print(self._two_panel_row(
+            self._network_panel(),
+            self._hardware_panel(),
+        ))
 
     def _panel(self, title, border, content, emphasis="normal"):
         style_map = {
@@ -284,3 +286,76 @@ class Display:
 
     def _clock(self):
         return datetime.now().strftime("%H:%M:%S")
+
+    def _network_panel(self):
+        table = Table.grid(expand=True)
+        table.add_column()
+
+        try:
+            from core.system_state import get_network_state
+            net = get_network_state()
+        except Exception:
+            net = {}
+
+        wifi = net.get("wifi", "Unknown")
+        signal = net.get("signal", 0)
+        internet = net.get("internet", "Unknown")
+
+        table.add_row(f"WiFi     : {wifi}")
+        table.add_row(f"Signal   : {signal}")
+        table.add_row(f"Internet : {internet}")
+
+        return Panel(
+            table,
+            title="NETWORK",
+            border_style="blue",
+            box=box.SQUARE,
+            padding=(1, 2),
+            expand=True,
+        )
+
+    def _network_panel(self):
+        try:
+            from core.system_state import get_network_state
+            net = get_network_state()
+        except Exception:
+            net = {}
+
+        table = Table.grid(expand=True)
+        table.add_column()
+
+        table.add_row(f"WiFi     : {net.get('wifi', 'Unknown')}")
+        table.add_row(f"Signal   : {net.get('signal', 0)}")
+        table.add_row(f"Internet : {net.get('internet', 'Unknown')}")
+
+        return Panel(
+            table,
+            title="NETWORK",
+            border_style="blue",
+            box=box.SQUARE,
+            padding=(1, 2),
+            expand=True,
+        )
+
+    def _hardware_panel(self):
+        try:
+            from core.system_state import get_system_state
+            sys = get_system_state()
+        except Exception:
+            sys = {}
+
+        table = Table.grid(expand=True)
+        table.add_column()
+
+        table.add_row(f"CPU      : {sys.get('cpu', 0)}%")
+        table.add_row(f"TEMP     : {sys.get('temp', 0)}°C")
+        table.add_row(f"STATUS   : OK")
+
+        return Panel(
+            table,
+            title="HARDWARE",
+            border_style="magenta",
+            box=box.SQUARE,
+            padding=(1, 2),
+            expand=True,
+        )
