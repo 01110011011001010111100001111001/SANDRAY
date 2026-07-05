@@ -22,6 +22,10 @@ class Display:
         self.history = []
         self.logger = None
 
+        # CACHE LAYER (UI-004)
+        self._cached_conversation = None
+        self._cache_dirty = True
+
         self.theme = {
             "brand": "bold cyan",
             "muted": "dim",
@@ -38,6 +42,8 @@ class Display:
             "conversation_border": "blue",
             "verbose_border": "magenta",
         }
+
+    # ---------------- CORE ----------------
 
     def attach_logger(self, logger):
         self.logger = logger
@@ -57,6 +63,7 @@ class Display:
         self.history.append(
             self._entry("INSTRUCTION", text, self.theme["instruction"])
         )
+        self._cache_dirty = True
         self._render()
 
     def divider(self):
@@ -66,12 +73,14 @@ class Display:
         self.history.append(
             self._entry("YOU", text, self.theme["user"])
         )
+        self._cache_dirty = True
         self._render()
 
     def assistant(self, text):
         self.history.append(
             self._entry("SANDRAY", text, self.theme["assistant"])
         )
+        self._cache_dirty = True
         self._render()
 
     def footer(self):
@@ -90,6 +99,7 @@ class Display:
                 self.theme["error"],
             )
         )
+        self._cache_dirty = True
         self._render()
 
     def _entry(self, speaker, message, style):
@@ -100,15 +110,30 @@ class Display:
             "style": style,
         }
 
-    def _active_conversation(self):
-        return [
+    # ---------------- CACHE ----------------
+
+    def _get_conversation(self):
+        if not self._cache_dirty and self._cached_conversation is not None:
+            return self._cached_conversation
+
+        self._cached_conversation = [
             entry for entry in self.history
             if entry["speaker"] in ("YOU", "SANDRAY")
         ]
 
+        self._cache_dirty = False
+        return self._cached_conversation
+
+    # ---------------- RENDER PIPELINE ----------------
+
     def _render(self):
         console.clear()
 
+        self._render_top()
+        self._render_middle()
+        self._render_bottom()
+
+    def _render_top(self):
         console.print(
             self._two_panel_row(
                 self._assistant_panel(),
@@ -116,14 +141,18 @@ class Display:
             )
         )
 
+    def _render_middle(self):
         console.print(self._conversation_panel())
 
+    def _render_bottom(self):
         console.print(
             self._two_panel_row(
                 self._verbose_panel(),
                 self._performance_panel(),
             )
         )
+
+    # ---------------- PANELS ----------------
 
     def _two_panel_row(self, left, right):
         table = Table.grid(expand=True)
@@ -179,7 +208,9 @@ class Display:
         table = Table.grid(expand=True)
         table.add_column(ratio=1)
 
-        if not self.history:
+        conversation = self._get_conversation()
+
+        if not conversation:
             table.add_row(
                 Align.left(
                     Text(
@@ -189,8 +220,6 @@ class Display:
                 )
             )
         else:
-            conversation = self._active_conversation()
-
             for entry in conversation[-8:]:
                 header = Table.grid(expand=True)
                 header.add_column(justify="left", ratio=1)
