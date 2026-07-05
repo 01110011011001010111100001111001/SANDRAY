@@ -27,27 +27,27 @@ class Display:
 
         # VISUAL SYSTEM (UI-006)
         self.theme = {
-            "brand": "bold cyan",
+            "brand": "bold green",
             "muted": "dim",
             "ready": "bold green",
             "listening": "bold yellow",
-            "thinking": "bold magenta",
+            "thinking": "bold green",
             "speaking": "bold cyan",
-            "error": "bold red",
+            "error": "bold green",
 
             "user": "bold green",
-            "assistant": "bold cyan",
-            "instruction": "bold yellow",
+            "assistant": "bold green",
+            "instruction": "bold green",
 
-            "assistant_border": "cyan",
+            "assistant_border": "green",
             "status_border": "green",
-            "conversation_border": "blue",
-            "verbose_border": "magenta",
+            "conversation_border": "green",
+            "verbose_border": "green",
 
             # NEW: hierarchy modifiers
-            "primary": "bold white",
-            "secondary": "dim",
-            "accent": "cyan",
+            "primary": "bold green",
+            "secondary": "green",
+            "accent": "green",
         }
 
     # ---------------- CORE ----------------
@@ -130,13 +130,14 @@ class Display:
         self._render_bottom()
 
     def _render_top(self):
+        console.print(self._conversation_panel())
         console.print(self._two_panel_row(
             self._assistant_panel(),
             self._status_panel(),
         ))
 
     def _render_middle(self):
-        console.print(self._conversation_panel())
+        pass
 
     def _render_bottom(self):
         console.print(self._two_panel_row(
@@ -184,7 +185,7 @@ class Display:
             Text(f"Version {self.version}", style=self.theme["muted"]),
         )
 
-        return self._panel("ASSISTANT", self.theme["assistant_border"], grid, "primary")
+        return self._panel("ASSISTANT", self.theme["assistant_border"], grid)
 
     def _status_panel(self):
         status = self.current_status
@@ -199,7 +200,7 @@ class Display:
             Text(self._clock(), style=self.theme["muted"]),
         )
 
-        return self._panel("STATUS", style, grid, "primary")
+        return self._panel("STATUS", self.theme["status_border"], grid)
 
     def _conversation_panel(self):
         table = Table.grid(expand=True)
@@ -232,7 +233,7 @@ class Display:
         lines = get_verbose_lines() or ["No technical output captured."]
         lines = lines[-10:]
 
-        table = Table(expand=True, box=box.SIMPLE, show_header=True, header_style="bold magenta")
+        table = Table(expand=True, box=box.SIMPLE, show_header=False)
         table.add_column("OUTPUT", style=self.theme["secondary"])
 
         for l in lines:
@@ -241,7 +242,7 @@ class Display:
         return self._panel("ENGINE", self.theme["verbose_border"], table)
 
     def _performance_panel(self):
-        table = Table(expand=True, box=box.SIMPLE, show_header=True, header_style="bold red")
+        table = Table(expand=True, box=box.SIMPLE, show_header=False)
 
         table.add_column("PROCESS", style=self.theme["primary"], no_wrap=True)
         table.add_column("TIME", justify="right", style=self.theme["primary"], no_wrap=True)
@@ -271,7 +272,7 @@ class Display:
         while len(table.rows) < 10:
             table.add_row("", "", "")
 
-        return self._panel("PERFORMANCE", "red", table)
+        return self._panel("PERFORMANCE", "green", table)
 
     # ---------------- STATUS ----------------
 
@@ -301,14 +302,15 @@ class Display:
         signal = net.get("signal", 0)
         internet = net.get("internet", "Unknown")
 
-        table.add_row(f"WiFi     : {wifi}")
-        table.add_row(f"Signal   : {signal}")
-        table.add_row(f"Internet : {internet}")
+        table.add_row(Text(f"WiFi     : {net.get('wifi', 'Unknown')}", style=self.theme["primary"]))
+        table.add_row(Text(f"Signal   : {net.get('signal', 0)}", style=self.theme["primary"]))
+        table.add_row(Text(f"Internet : {net.get('internet', 'Unknown')}", style=self.theme["primary"]))
 
         return Panel(
             table,
             title="NETWORK",
-            border_style="blue",
+            title_align="left",
+            border_style="green",
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
@@ -324,14 +326,15 @@ class Display:
         table = Table.grid(expand=True)
         table.add_column()
 
-        table.add_row(f"WiFi     : {net.get('wifi', 'Unknown')}")
-        table.add_row(f"Signal   : {net.get('signal', 0)}")
-        table.add_row(f"Internet : {net.get('internet', 'Unknown')}")
+        table.add_row(Text(f"WiFi     : {net.get('wifi', 'Unknown')}", style=self.theme["primary"]))
+        table.add_row(Text(f"Signal   : {net.get('signal', 0)}", style=self.theme["primary"]))
+        table.add_row(Text(f"Internet : {net.get('internet', 'Unknown')}", style=self.theme["primary"]))
 
         return Panel(
             table,
             title="NETWORK",
-            border_style="blue",
+            title_align="left",
+            border_style="green",
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
@@ -347,14 +350,15 @@ class Display:
         table = Table.grid(expand=True)
         table.add_column()
 
-        table.add_row(f"CPU      : {sys.get('cpu', 0)}%")
-        table.add_row(f"TEMP     : {sys.get('temp', 0)}°C")
-        table.add_row(f"STATUS   : OK")
+        table.add_row(Text(f"CPU      : {sys.get('cpu', 0)}%", style=self.theme["primary"]))
+        table.add_row(Text(f"TEMP     : {sys.get('temp', 0)}°C", style=self.theme["primary"]))
+        table.add_row(Text("STATUS   : OK", style=self.theme["primary"]))
 
         return Panel(
             table,
             title="HARDWARE",
-            border_style="magenta",
+            title_align="left",
+            border_style="green",
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
