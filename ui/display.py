@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 from rich.align import Align
 from rich.console import Console
@@ -149,6 +150,8 @@ class Display:
             self._hardware_panel(),
         ))
 
+        console.print(self._open_source_panel())
+
     def _panel(self, title, border, content, emphasis="normal"):
         style_map = {
             "normal": box.SQUARE,
@@ -182,7 +185,7 @@ class Display:
 
         grid.add_row(
             Text("SANDRAY", style=self.theme["primary"]),
-            Text(f"Model {self.model}", style=self.theme["muted"]),
+            Text("AI gpt-5-mini", style=self.theme["primary"]),
         )
 
         return self._panel("ASSISTANT", self.theme["assistant_border"], grid)
@@ -197,7 +200,7 @@ class Display:
 
         grid.add_row(
             Text(status, style=f"bold {style}"),
-            Text(self._clock(), style=self.theme["muted"]),
+            Text(self._clock(), style=self.theme["primary"]),
         )
 
         return self._panel("STATUS", self.theme["status_border"], grid)
@@ -224,7 +227,7 @@ class Display:
                 )
 
                 table.add_row(header)
-                table.add_row(Text(e["message"], style=self.theme["primary"]))
+                table.add_row(Text(e["message"], style="white"))
                 table.add_row(Rule(style=self.theme["secondary"]))
 
         return self._panel("CONVERSATION", self.theme["conversation_border"], table)
@@ -340,6 +343,35 @@ class Display:
             expand=True,
         )
 
+
+    def _open_source_panel(self):
+        import subprocess
+
+        table = Table.grid(expand=True)
+        table.add_column()
+
+        try:
+            repo = subprocess.check_output(
+                ["git", "-C", "/home/richard/sandray/SANDRAY-v2", "config", "--get", "remote.origin.url"],
+                text=True
+            ).strip()
+        except Exception:
+            repo = "Unknown"
+
+        try:
+            license_name = Path("/home/richard/sandray/SANDRAY-v2/LICENSE").read_text().splitlines()[0].strip()
+        except Exception:
+            license_name = "Unknown License"
+
+        table.add_row(
+            Text(
+                f"{license_name} | {repo} | Version {self.version}",
+                style=self.theme["primary"]
+            )
+        )
+
+        return self._panel("OPEN SOURCE", "green", table)
+
     def _hardware_panel(self):
         try:
             from core.system_state import get_system_state
@@ -353,6 +385,19 @@ class Display:
         table.add_row(Text(f"CPU      : {sys.get('cpu', 0)}%", style=self.theme["primary"]))
         table.add_row(Text(f"TEMP     : {sys.get('temp', 0)}°C", style=self.theme["primary"]))
         table.add_row(Text("STATUS   : OK", style=self.theme["primary"]))
+
+        try:
+            import yaml
+            cfg = yaml.safe_load(Path("/home/richard/sandray/SANDRAY-v2/config/config.yaml").read_text()) or {}
+            audio = cfg.get("audio", {})
+            mic = audio.get("microphone", "Unknown")
+            speaker = audio.get("speaker", "Unknown")
+        except Exception:
+            mic = "Unknown"
+            speaker = "Unknown"
+
+        table.add_row(Text(f"MIC      : {mic}", style=self.theme["primary"]))
+        table.add_row(Text(f"SPEAKER  : {speaker}", style=self.theme["primary"]))
 
         return Panel(
             table,
