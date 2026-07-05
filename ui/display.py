@@ -182,7 +182,7 @@ class Display:
 
         grid.add_row(
             Text("SANDRAY", style=self.theme["primary"]),
-            Text(f"Version {self.version}", style=self.theme["muted"]),
+            Text(f"Model {self.model}", style=self.theme["muted"]),
         )
 
         return self._panel("ASSISTANT", self.theme["assistant_border"], grid)
