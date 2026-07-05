@@ -25,21 +25,29 @@ class Display:
         self._cached_conversation = None
         self._cache_dirty = True
 
+        # VISUAL SYSTEM (UI-006)
         self.theme = {
             "brand": "bold cyan",
             "muted": "dim",
-            "ready": "green",
-            "listening": "yellow",
-            "thinking": "magenta",
-            "speaking": "cyan",
-            "error": "red",
+            "ready": "bold green",
+            "listening": "bold yellow",
+            "thinking": "bold magenta",
+            "speaking": "bold cyan",
+            "error": "bold red",
+
             "user": "bold green",
             "assistant": "bold cyan",
             "instruction": "bold yellow",
+
             "assistant_border": "cyan",
             "status_border": "green",
             "conversation_border": "blue",
             "verbose_border": "magenta",
+
+            # NEW: hierarchy modifiers
+            "primary": "bold white",
+            "secondary": "dim",
+            "accent": "cyan",
         }
 
     # ---------------- CORE ----------------
@@ -113,26 +121,6 @@ class Display:
         self._cache_dirty = False
         return self._cached_conversation
 
-    # ---------------- VISUAL HELPERS (NEW) ----------------
-
-    def _panel(self, title, border, content):
-        return Panel(
-            content,
-            title=title,
-            title_align="left",
-            border_style=border,
-            box=box.SQUARE,
-            padding=(1, 2),
-            expand=True,
-        )
-
-    def _grid(self, *rows):
-        table = Table.grid(expand=True)
-        table.add_column(ratio=1)
-        for r in rows:
-            table.add_row(r)
-        return table
-
     # ---------------- RENDER ----------------
 
     def _render(self):
@@ -142,25 +130,38 @@ class Display:
         self._render_bottom()
 
     def _render_top(self):
-        console.print(
-            self._two_panel_row(
-                self._assistant_panel(),
-                self._status_panel(),
-            )
-        )
+        console.print(self._two_panel_row(
+            self._assistant_panel(),
+            self._status_panel(),
+        ))
 
     def _render_middle(self):
         console.print(self._conversation_panel())
 
     def _render_bottom(self):
-        console.print(
-            self._two_panel_row(
-                self._verbose_panel(),
-                self._performance_panel(),
-            )
-        )
+        console.print(self._two_panel_row(
+            self._verbose_panel(),
+            self._performance_panel(),
+        ))
 
-    # ---------------- PANELS ----------------
+    # ---------------- PANEL SYSTEM ----------------
+
+    def _panel(self, title, border, content, emphasis="normal"):
+        style_map = {
+            "normal": box.SQUARE,
+            "primary": box.HEAVY,
+            "secondary": box.SQUARE,
+        }
+
+        return Panel(
+            content,
+            title=title,
+            title_align="left",
+            border_style=border,
+            box=style_map.get(emphasis, box.SQUARE),
+            padding=(1, 2),
+            expand=True,
+        )
 
     def _two_panel_row(self, left, right):
         table = Table.grid(expand=True)
@@ -169,17 +170,19 @@ class Display:
         table.add_row(left, right)
         return table
 
+    # ---------------- PANELS ----------------
+
     def _assistant_panel(self):
         grid = Table.grid(expand=True)
         grid.add_column(justify="left", ratio=1)
         grid.add_column(justify="right")
 
         grid.add_row(
-            Text("SANDRAY", style=self.theme["brand"]),
+            Text("SANDRAY", style=self.theme["primary"]),
             Text(f"Version {self.version}", style=self.theme["muted"]),
         )
 
-        return self._panel("ASSISTANT", self.theme["assistant_border"], grid)
+        return self._panel("ASSISTANT", self.theme["assistant_border"], grid, "primary")
 
     def _status_panel(self):
         status = self.current_status
@@ -194,7 +197,7 @@ class Display:
             Text(self._clock(), style=self.theme["muted"]),
         )
 
-        return self._panel("STATUS", style, grid)
+        return self._panel("STATUS", style, grid, "primary")
 
     def _conversation_panel(self):
         table = Table.grid(expand=True)
@@ -204,7 +207,7 @@ class Display:
 
         if not conv:
             table.add_row(
-                Align.left(Text("Ready for a typed or spoken request.", style=self.theme["muted"]))
+                Align.left(Text("Ready for a typed or spoken request.", style=self.theme["secondary"]))
             )
         else:
             for e in conv[-8:]:
@@ -218,8 +221,8 @@ class Display:
                 )
 
                 table.add_row(header)
-                table.add_row(Text(e["message"], style="white"))
-                table.add_row(Rule(style="dim"))
+                table.add_row(Text(e["message"], style=self.theme["primary"]))
+                table.add_row(Rule(style=self.theme["secondary"]))
 
         return self._panel("CONVERSATION", self.theme["conversation_border"], table)
 
@@ -228,7 +231,7 @@ class Display:
         lines = lines[-10:]
 
         table = Table(expand=True, box=box.SIMPLE, show_header=True, header_style="bold magenta")
-        table.add_column("OUTPUT", style="dim")
+        table.add_column("OUTPUT", style=self.theme["secondary"])
 
         for l in lines:
             table.add_row(str(l))
@@ -238,9 +241,9 @@ class Display:
     def _performance_panel(self):
         table = Table(expand=True, box=box.SIMPLE, show_header=True, header_style="bold red")
 
-        table.add_column("PROCESS", style="white", no_wrap=True)
-        table.add_column("TIME", justify="right", style="white", no_wrap=True)
-        table.add_column("DETAIL", style="white")
+        table.add_column("PROCESS", style=self.theme["primary"], no_wrap=True)
+        table.add_column("TIME", justify="right", style=self.theme["primary"], no_wrap=True)
+        table.add_column("DETAIL", style=self.theme["secondary"])
 
         order = ["WAKE_WORD","RECORDER","WHISPER","AI","PIPER","PLAYBACK","TOTAL"]
 
@@ -253,11 +256,8 @@ class Display:
             for n in order:
                 if n in timings:
                     found = True
-                    t = f"{timings[n]:.2f} s"
-                    if n == "TOTAL":
-                        n = f"[bold red]{n}[/bold red]"
-                        t = f"[bold red]{t}[/bold red]"
-                    table.add_row(n, t, "[green]OK[/green]")
+                    t = f"{timings[n]:.2f}s"
+                    table.add_row(n, t, "OK")
 
             for k, v in stats.items():
                 found = True
