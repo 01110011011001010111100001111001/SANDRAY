@@ -131,7 +131,6 @@ class Display:
         self._render_bottom()
 
     def _render_top(self):
-        console.print(self._conversation_panel())
         console.print(self._two_panel_row(
             self._assistant_panel(),
             self._status_panel(),
@@ -150,7 +149,7 @@ class Display:
             self._hardware_panel(),
         ))
 
-        console.print(self._open_source_panel())
+        console.print(self._conversation_panel())
 
     def _panel(self, title, border, content, emphasis="normal"):
         style_map = {
@@ -184,8 +183,8 @@ class Display:
         grid.add_column(justify="right")
 
         grid.add_row(
-            Text("SANDRAY", style=self.theme["primary"]),
-            Text("AI gpt-5-mini", style=self.theme["primary"]),
+            Text(f"SANDRAY v{self.version}", style=self.theme["primary"]),
+            Text("", style=self.theme["primary"]),
         )
 
         return self._panel("ASSISTANT", self.theme["assistant_border"], grid)
@@ -343,34 +342,6 @@ class Display:
             expand=True,
         )
 
-
-    def _open_source_panel(self):
-        import subprocess
-
-        table = Table.grid(expand=True)
-        table.add_column()
-
-        try:
-            repo = subprocess.check_output(
-                ["git", "-C", "/home/richard/sandray/SANDRAY-v2", "config", "--get", "remote.origin.url"],
-                text=True
-            ).strip()
-        except Exception:
-            repo = "Unknown"
-
-        try:
-            license_name = Path("/home/richard/sandray/SANDRAY-v2/LICENSE").read_text().splitlines()[0].strip()
-        except Exception:
-            license_name = "Unknown License"
-
-        table.add_row(
-            Text(
-                f"{license_name} | {repo} | Version {self.version}",
-                style=self.theme["primary"]
-            )
-        )
-
-        return self._panel("OPEN SOURCE", "green", table)
 
     def _hardware_panel(self):
         try:
