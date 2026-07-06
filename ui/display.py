@@ -8,6 +8,7 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 from rich import box
+import yaml
 
 from core.process import get_verbose_lines
 
@@ -18,6 +19,20 @@ console = Console()
 class Display:
     def __init__(self):
         self.version = ""
+
+        try:
+            cfg = yaml.safe_load(
+                Path("/home/richard/sandray/SANDRAY-v2/config/config.yaml").read_text()
+            ) or {}
+            audio = cfg.get("audio", {})
+            ai = cfg.get("ai", {})
+            self.ai_model = ai.get("model", "Unknown")
+            self.microphone = audio.get("microphone", "Unknown")
+            self.speaker = audio.get("speaker", "Unknown")
+        except Exception:
+            self.ai_model = "Unknown"
+            self.microphone = "Unknown"
+            self.speaker = "Unknown"
         self.current_status = "READY"
         self.mode = "MANUAL MODE"
         self.history = []
@@ -44,6 +59,10 @@ class Display:
             "status_border": "green",
             "conversation_border": "green",
             "verbose_border": "green",
+            "performance_border": "green",
+            "network_border": "green",
+            "hardware_border": "green",
+            "conversation_text": "white",
 
             # NEW: hierarchy modifiers
             "primary": "bold green",
@@ -184,7 +203,7 @@ class Display:
 
         grid.add_row(
             Text(f"SANDRAY v{self.version}", style=self.theme["primary"]),
-            Text("", style=self.theme["primary"]),
+            Text(self.ai_model, style=self.theme["primary"]),
         )
 
         return self._panel("ASSISTANT", self.theme["assistant_border"], grid)
@@ -226,7 +245,7 @@ class Display:
                 )
 
                 table.add_row(header)
-                table.add_row(Text(e["message"], style="white"))
+                table.add_row(Text(e["message"], style=self.theme["conversation_text"]))
                 table.add_row(Rule(style=self.theme["secondary"]))
 
         return self._panel("CONVERSATION", self.theme["conversation_border"], table)
@@ -274,7 +293,7 @@ class Display:
         while len(table.rows) < 10:
             table.add_row("", "", "")
 
-        return self._panel("PERFORMANCE", "green", table)
+        return self._panel("PERFORMANCE", self.theme["performance_border"], table)
 
     # ---------------- STATUS ----------------
 
@@ -285,40 +304,12 @@ class Display:
             "THINKING": self.theme["thinking"],
             "SPEAKING": self.theme["speaking"],
             "ERROR": self.theme["error"],
-        }.get(status, "white")
+        }.get(status, self.theme["primary"])
 
     def _clock(self):
         return datetime.now().strftime("%H:%M:%S")
 
     def _network_panel(self):
-        table = Table.grid(expand=True)
-        table.add_column()
-
-        try:
-            from core.system_state import get_network_state
-            net = get_network_state()
-        except Exception:
-            net = {}
-
-        wifi = net.get("wifi", "Unknown")
-        signal = net.get("signal", 0)
-        internet = net.get("internet", "Unknown")
-
-        table.add_row(Text(f"WiFi     : {net.get('wifi', 'Unknown')}", style=self.theme["primary"]))
-        table.add_row(Text(f"Signal   : {net.get('signal', 0)}", style=self.theme["primary"]))
-        table.add_row(Text(f"Internet : {net.get('internet', 'Unknown')}", style=self.theme["primary"]))
-
-        return Panel(
-            table,
-            title="NETWORK",
-            title_align="left",
-            border_style="green",
-            box=box.SQUARE,
-            padding=(1, 2),
-            expand=True,
-        )
-
-    def _network_panel(self):
         try:
             from core.system_state import get_network_state
             net = get_network_state()
@@ -336,7 +327,7 @@ class Display:
             table,
             title="NETWORK",
             title_align="left",
-            border_style="green",
+            border_style=self.theme["network_border"],
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
@@ -357,24 +348,14 @@ class Display:
         table.add_row(Text(f"TEMP     : {sys.get('temp', 0)}°C", style=self.theme["primary"]))
         table.add_row(Text("STATUS   : OK", style=self.theme["primary"]))
 
-        try:
-            import yaml
-            cfg = yaml.safe_load(Path("/home/richard/sandray/SANDRAY-v2/config/config.yaml").read_text()) or {}
-            audio = cfg.get("audio", {})
-            mic = audio.get("microphone", "Unknown")
-            speaker = audio.get("speaker", "Unknown")
-        except Exception:
-            mic = "Unknown"
-            speaker = "Unknown"
-
-        table.add_row(Text(f"MIC      : {mic}", style=self.theme["primary"]))
-        table.add_row(Text(f"SPEAKER  : {speaker}", style=self.theme["primary"]))
+        table.add_row(Text(f"MIC      : {self.microphone}", style=self.theme["primary"]))
+        table.add_row(Text(f"SPEAKER  : {self.speaker}", style=self.theme["primary"]))
 
         return Panel(
             table,
             title="HARDWARE",
             title_align="left",
-            border_style="green",
+            border_style=self.theme["hardware_border"],
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
