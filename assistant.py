@@ -89,6 +89,37 @@ def battery_status():
     return ""
 
 
+
+def network_type():
+    try:
+        with open(
+            "/proc/net/route",
+            "r",
+            encoding="utf-8"
+        ) as handle:
+            for line in handle.readlines()[1:]:
+                fields = line.split()
+                if len(fields) > 1 and fields[1] == "00000000":
+                    interface = fields[0]
+
+                    if os.path.exists(
+                        f"/sys/class/net/{interface}/wireless"
+                    ):
+                        return "WiFi"
+
+                    if interface.startswith(("wwan", "usb", "cell")):
+                        return "Mobile"
+
+                    if interface.startswith(("eth", "en", "eno", "enp")):
+                        return "Ethernet"
+
+                    return interface
+    except OSError:
+        pass
+
+    return "Offline"
+
+
 def local_ip_address():
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
@@ -108,7 +139,8 @@ def main():
     display.configure_identity(
         cfg["ai"]["model"],
         socket.gethostname(),
-        local_ip_address()
+        local_ip_address(),
+        network_type()
     )
 
     microphone = cfg["audio"]["microphone"]

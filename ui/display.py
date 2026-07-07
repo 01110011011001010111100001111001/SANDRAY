@@ -20,6 +20,7 @@ class Display:
         self.model = ""
         self.hostname = ""
         self.ip_address = ""
+        self.network_type = ""
         self.current_status = "READY"
         self.status_info = ""
         self.mode = "MANUAL MODE"
@@ -46,11 +47,13 @@ class Display:
         self,
         model,
         hostname,
-        ip_address
+        ip_address,
+        network_type
     ):
         self.model = str(model)
         self.hostname = str(hostname)
         self.ip_address = str(ip_address)
+        self.network_type = str(network_type)
 
     def set_status_info(self, text):
         self.status_info = str(text)
@@ -137,7 +140,10 @@ class Display:
         grid.add_column(justify="right")
 
         grid.add_row(
-            Text(f"{self.hostname} {self.ip_address}", style=self.theme["brand"]),
+            Text(
+                f"{self.hostname} {self.ip_address} {self.network_type}",
+                style=self.theme["brand"]
+            ),
             Text(self.model, style=self.theme["muted"]),
         )
 
