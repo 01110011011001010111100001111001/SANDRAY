@@ -115,10 +115,7 @@ class Display:
         )
 
         console.print(
-            self._two_panel_row(
-                self._verbose_panel(),
-                self._performance_panel(),
-            )
+            self._performance_panel()
         )
 
     def _two_panel_row(self, left, right):
@@ -228,7 +225,7 @@ class Display:
         table = Table(
             expand=True,
             box=box.SIMPLE,
-            show_header=True,
+            show_header=False,
             header_style="bold magenta",
         )
 
@@ -251,59 +248,56 @@ class Display:
         )
 
     def _performance_panel(self):
-        table = Table(
-            expand=True,
-            box=box.SIMPLE,
-            show_header=True,
-            header_style="bold red",
-        )
+        parts = []
 
-        table.add_column("PROCESS", style="white", no_wrap=True)
-        table.add_column("TIME", justify="right", style="white", no_wrap=True)
-        table.add_column("DETAIL", style="white")
-
-        order = [
+        timing_order = [
+            "TOTAL",
             "WAKE_WORD",
             "RECORDER",
             "WHISPER",
             "AI",
             "PIPER",
             "PLAYBACK",
-            "TOTAL",
         ]
 
-        found = False
+        stats_order = [
+            "INPUT",
+            "OUTPUT",
+        ]
 
         if self.logger is not None:
             timings = self.logger.get_timings()
             stats = self.logger.get_stats()
 
-            for name in order:
+            for name in timing_order:
                 if name in timings:
-                    found = True
-                    label = name
                     elapsed = f"{timings[name]:.2f} s"
 
                     if name == "TOTAL":
-                        label = "[bold red]TOTAL[/bold red]"
-                        elapsed = f"[bold red]{elapsed}[/bold red]"
+                        parts.append(
+                            f"[bold red]{name} {elapsed}[/bold red]"
+                        )
 
-                    table.add_row(label, elapsed, "[green]OK[/green]")
+            for name in stats_order:
+                if name in stats:
+                    parts.append(f"{name} {stats[name]}")
+
+            for name in timing_order:
+                if name in timings and name != "TOTAL":
+                    elapsed = f"{timings[name]:.2f} s"
+                    parts.append(
+                        f"{name} {elapsed} [green]OK[/green]"
+                    )
 
             for name, value in stats.items():
-                found = True
-                table.add_row(str(name), "", str(value))
+                if name not in stats_order:
+                    parts.append(f"{name} {value}")
 
-        if not found:
-            table.add_row("SYSTEM", "", "Waiting for first completed turn.")
-
-        ROWS = 10
-
-        while len(table.rows) < ROWS:
-            table.add_row("", "", "")
+        if not parts:
+            parts.append("SYSTEM Waiting for first completed turn.")
 
         return Panel(
-            table,
+            Text.from_markup(" | ".join(parts)),
             title="PERFORMANCE",
             title_align="left",
             border_style="red",
