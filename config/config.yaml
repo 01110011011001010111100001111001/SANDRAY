@@ -62,7 +62,7 @@ audio:
   silence_detection:
     enabled: true
     timeout: 2.0
-    threshold: 900
+    threshold: 300
 
 interface:
   theme: "colour"
