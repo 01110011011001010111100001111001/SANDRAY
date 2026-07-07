@@ -3,14 +3,14 @@ name: "All Green"
 brand: bold green
 muted: green
 
-ready: green
-listening: green
-thinking: green
-speaking: green
-error: green
+ready: white
+listening: white
+thinking: white
+speaking: white
+error: white
 
-user: green
-assistant: green
+user: yellow
+assistant: red
 instruction: green
 
 assistant_border: green
@@ -25,3 +25,4 @@ table_header: green
 table_text: green
 ok: green
 total: bold green
+conversation_label: green

@@ -152,22 +152,17 @@ class Display:
         style = self._status_style(status)
 
         grid = Table.grid(expand=True)
-        grid.add_column(justify="left", ratio=1)
-        grid.add_column(justify="right")
+        grid.add_column(justify="left")
 
         grid.add_row(
-            Text(status, style=f"bold {style}"),
-            Text(
-                self._clock(),
-                style=self.theme["muted"]
-            ),
+            Text(status, style=f"bold {style}")
         )
 
         return Panel(
             grid,
             title="STATUS",
             title_align="left",
-            border_style=style,
+            border_style=self.theme["status_border"],
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
@@ -198,12 +193,12 @@ class Display:
                 header.add_column(justify="right")
 
                 header.add_row(
-                    Text(entry["speaker"], style=entry["style"]),
+                    Text(entry["speaker"], style=self.theme["conversation_label"]),
                     Text(entry["time"], style=self.theme["muted"]),
                 )
 
                 table.add_row(header)
-                table.add_row(Text(entry["message"], style=self.theme["normal"]))
+                table.add_row(Text(entry["message"], style=entry["style"]))
                 table.add_row(Rule(style=self.theme["rule"]))
 
         return Panel(
