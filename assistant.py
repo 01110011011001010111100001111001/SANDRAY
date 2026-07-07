@@ -7,6 +7,7 @@
 
 import os
 
+import socket
 import yaml
 
 from ai.chat import ask
@@ -30,6 +31,12 @@ CONFIG_FILE = os.path.join(
     "config.yaml"
 )
 
+THEME_DIR = os.path.join(
+    BASE_DIR,
+    "config",
+    "themes"
+)
+
 QUESTION_FILE = "/tmp/question.wav"
 
 
@@ -42,9 +49,41 @@ def load_config():
         return yaml.safe_load(handle)
 
 
+def load_theme(name):
+    theme_file = os.path.join(
+        THEME_DIR,
+        f"{name}.yaml"
+    )
+
+    with open(
+        theme_file,
+        "r",
+        encoding="utf-8"
+    ) as handle:
+        return yaml.safe_load(handle)
+
+
+
+def local_ip_address():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+            probe.connect(("8.8.8.8", 80))
+            return probe.getsockname()[0]
+    except OSError:
+        return "no-ip"
+
+
 def main():
     cfg = load_config()
+    theme = load_theme(cfg["interface"]["theme"])
+
     display = Display()
+    display.set_theme(theme)
+    display.configure_identity(
+        cfg["ai"]["model"],
+        socket.gethostname(),
+        local_ip_address()
+    )
 
     microphone = cfg["audio"]["microphone"]
     speaker = cfg["audio"]["speaker"]

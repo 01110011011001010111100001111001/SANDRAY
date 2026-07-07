@@ -65,7 +65,7 @@ audio:
     threshold: 300
 
 interface:
-  theme: "colour"
+  theme: "green"
   developer_mode: false
 
 logging:

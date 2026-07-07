@@ -17,27 +17,19 @@ console = Console()
 class Display:
     def __init__(self):
         self.version = ""
+        self.model = ""
+        self.hostname = ""
+        self.ip_address = ""
         self.current_status = "READY"
         self.mode = "MANUAL MODE"
         self.history = []
         self.logger = None
 
-        self.theme = {
-            "brand": "bold cyan",
-            "muted": "dim",
-            "ready": "green",
-            "listening": "yellow",
-            "thinking": "magenta",
-            "speaking": "cyan",
-            "error": "red",
-            "user": "bold green",
-            "assistant": "bold cyan",
-            "instruction": "bold yellow",
-            "assistant_border": "cyan",
-            "status_border": "green",
-            "conversation_border": "blue",
-            "verbose_border": "magenta",
-        }
+        self.theme = {}
+
+
+    def set_theme(self, theme):
+        self.theme = dict(theme)
 
     def attach_logger(self, logger):
         self.logger = logger
@@ -48,6 +40,16 @@ class Display:
     def header(self, version):
         self.version = version
         self._render()
+
+    def configure_identity(
+        self,
+        model,
+        hostname,
+        ip_address
+    ):
+        self.model = str(model)
+        self.hostname = str(hostname)
+        self.ip_address = str(ip_address)
 
     def status(self, text):
         self.current_status = text.upper()
@@ -111,11 +113,11 @@ class Display:
         )
 
         console.print(
-            self._conversation_panel()
+            self._performance_panel()
         )
 
         console.print(
-            self._performance_panel()
+            self._conversation_panel()
         )
 
     def _two_panel_row(self, left, right):
@@ -131,8 +133,8 @@ class Display:
         grid.add_column(justify="right")
 
         grid.add_row(
-            Text("SANDRAY", style=self.theme["brand"]),
-            Text(f"Version {self.version}", style=self.theme["muted"]),
+            Text(f"{self.hostname} {self.ip_address}", style=self.theme["brand"]),
+            Text(self.model, style=self.theme["muted"]),
         )
 
         return Panel(
@@ -201,8 +203,8 @@ class Display:
                 )
 
                 table.add_row(header)
-                table.add_row(Text(entry["message"], style="white"))
-                table.add_row(Rule(style="dim"))
+                table.add_row(Text(entry["message"], style=self.theme["normal"]))
+                table.add_row(Rule(style=self.theme["rule"]))
 
         return Panel(
             table,
@@ -226,10 +228,10 @@ class Display:
             expand=True,
             box=box.SIMPLE,
             show_header=False,
-            header_style="bold magenta",
+            header_style=self.theme["table_header"],
         )
 
-        table.add_column("OUTPUT", style="dim")
+        table.add_column("OUTPUT", style=self.theme["table_text"])
 
         for line in lines:
             table.add_row(str(line))
@@ -298,9 +300,9 @@ class Display:
 
         return Panel(
             Text.from_markup(" | ".join(parts)),
-            title="PERFORMANCE",
+            title="SYSTEM",
             title_align="left",
-            border_style="red",
+            border_style=self.theme["system_border"],
             box=box.SQUARE,
             padding=(1, 2),
             expand=True,
