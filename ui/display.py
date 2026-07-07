@@ -21,6 +21,7 @@ class Display:
         self.hostname = ""
         self.ip_address = ""
         self.current_status = "READY"
+        self.status_info = ""
         self.mode = "MANUAL MODE"
         self.history = []
         self.logger = None
@@ -50,6 +51,9 @@ class Display:
         self.model = str(model)
         self.hostname = str(hostname)
         self.ip_address = str(ip_address)
+
+    def set_status_info(self, text):
+        self.status_info = str(text)
 
     def status(self, text):
         self.current_status = text.upper()
@@ -152,10 +156,12 @@ class Display:
         style = self._status_style(status)
 
         grid = Table.grid(expand=True)
-        grid.add_column(justify="left")
+        grid.add_column(justify="left", ratio=1)
+        grid.add_column(justify="right")
 
         grid.add_row(
-            Text(status, style=f"bold {style}")
+            Text(status, style=f"bold {style}"),
+            Text(self.status_info, style=self.theme["battery"])
         )
 
         return Panel(
@@ -295,7 +301,7 @@ class Display:
 
         return Panel(
             Text.from_markup(" | ".join(parts)),
-            title="SYSTEM",
+            title="PIPELINE",
             title_align="left",
             border_style=self.theme["system_border"],
             box=box.SQUARE,

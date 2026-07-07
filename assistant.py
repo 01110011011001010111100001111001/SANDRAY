@@ -64,6 +64,31 @@ def load_theme(name):
 
 
 
+
+def battery_status():
+    power_supply = "/sys/class/power_supply"
+
+    try:
+        for name in os.listdir(power_supply):
+            capacity_file = os.path.join(
+                power_supply,
+                name,
+                "capacity"
+            )
+
+            if os.path.exists(capacity_file):
+                with open(
+                    capacity_file,
+                    "r",
+                    encoding="utf-8"
+                ) as handle:
+                    return "BATTERY " + handle.read().strip() + "%"
+    except OSError:
+        pass
+
+    return ""
+
+
 def local_ip_address():
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
@@ -79,6 +104,7 @@ def main():
 
     display = Display()
     display.set_theme(theme)
+    display.set_status_info(battery_status())
     display.configure_identity(
         cfg["ai"]["model"],
         socket.gethostname(),
@@ -280,6 +306,8 @@ def main():
                 "PROMPT",
                 "Prompt built."
             )
+
+            display.status("THINKING")
 
             logger.start("AI")
 

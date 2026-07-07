@@ -1,7 +1,7 @@
 name: "All Green"
 
-brand: bold green
-muted: green
+brand: "#98FB98"
+muted: "#98FB98"
 
 ready: white
 listening: white
@@ -11,18 +11,19 @@ error: white
 
 user: yellow
 assistant: red
-instruction: green
+instruction: bright_green
 
-assistant_border: green
-status_border: green
-conversation_border: green
-verbose_border: green
-system_border: green
+assistant_border: bright_green
+status_border: bright_green
+conversation_border: bright_green
+verbose_border: bright_green
+system_border: bright_green
 
-normal: green
-rule: green
-table_header: green
-table_text: green
-ok: green
-total: bold green
-conversation_label: green
+normal: bright_green
+rule: bright_green
+table_header: bright_green
+table_text: bright_green
+ok: bright_green
+total: bold bright_green
+conversation_label: bright_green
+battery: "#98FB98"
