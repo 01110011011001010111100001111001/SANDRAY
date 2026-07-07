@@ -57,10 +57,18 @@ def transcribe(
             "Whisper transcription failed." + detail
         ) from error
 
+    ignored_prefixes = (
+        "whisper_",
+        "main:",
+        "read_audio_data:",
+        "system_info:",
+    )
+
     lines = [
         line.strip()
         for line in result.stdout.splitlines()
         if line.strip()
+        and not line.strip().startswith(ignored_prefixes)
     ]
 
     if not lines:

@@ -26,7 +26,7 @@ def run_process(command, input_text=None, check=True):
         text=True,
         errors="replace",
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE,
         check=False,
     )
 
